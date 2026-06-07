@@ -883,7 +883,9 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  padding-bottom: max(var(--safe-bottom), 0.25rem);
+  /* Home-indicator dock clearance only — keep this tight so the bar sits
+     low; the buttons add no extra bottom padding of their own. */
+  padding-bottom: var(--safe-bottom);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
 }
@@ -895,7 +897,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  padding: 0.625rem 0.25rem 0.5rem;
+  padding: 0.375rem 0.25rem 0.3125rem;
   border: none;
   border-bottom: none;
   border-top: 2px solid transparent;
