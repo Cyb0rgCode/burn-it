@@ -36,6 +36,7 @@ html {
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
   height: 100%;
+  background: var(--bg);
 }
 
 body {
@@ -877,7 +878,13 @@ body {
 /* ── Mobile bottom nav ── */
 .mobile-nav {
   display: none;
-  flex-shrink: 0;
+  /* Pinned to the true viewport bottom. position:fixed hits the real screen
+     edge even when 100dvh resolves short on iOS standalone — so the dock
+     never floats above the bottom. */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 200;
   background: rgba(13, 13, 15, 0.92);
   backdrop-filter: blur(20px);
@@ -940,7 +947,7 @@ body {
   }
   .tagline { display: none; }
   .main {
-    padding: 0 1rem 1.5rem;
+    padding: 0 1rem calc(3.5rem + var(--safe-bottom));
     padding-right: max(1rem, var(--safe-right));
     padding-left: max(1rem, var(--safe-left));
   }
@@ -962,7 +969,7 @@ body {
   }
   .header-date { display: none; }
   .main {
-    padding: 0 0.75rem 1.25rem;
+    padding: 0 0.75rem calc(3.5rem + var(--safe-bottom));
     padding-right: max(0.75rem, var(--safe-right));
     padding-left: max(0.75rem, var(--safe-left));
   }
@@ -995,7 +1002,7 @@ body {
     padding-left: max(0.75rem, var(--safe-left));
   }
   .main {
-    padding: 0 0.5rem 1rem;
+    padding: 0 0.5rem calc(3.5rem + var(--safe-bottom));
     padding-right: max(0.5rem, var(--safe-right));
     padding-left: max(0.5rem, var(--safe-left));
   }
