@@ -52,8 +52,10 @@ body {
      no page-level rubber-banding. */
   display: flex;
   flex-direction: column;
-  height: 100vh;   /* fallback for older iOS */
-  height: 100dvh;  /* tracks dynamic toolbars / standalone chrome */
+  /* height:100% (off html height:100%) is the reliable full-screen height in
+     iOS standalone web apps. 100dvh can resolve ~34px short there, which left
+     a gap under the bottom dock no matter how the nav was positioned. */
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -103,6 +105,18 @@ body {
   font-size: 0.8125rem;
   white-space: nowrap;
 }
+
+/* Temporary version marker — confirms which deploy the device is running */
+.build-tag {
+  margin-left: auto;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+.header-date + .build-tag { margin-left: 0.625rem; }
 
 /* ── Warning banner ── */
 .warning-banner {
@@ -878,13 +892,9 @@ body {
 /* ── Mobile bottom nav ── */
 .mobile-nav {
   display: none;
-  /* Pinned to the true viewport bottom. position:fixed hits the real screen
-     edge even when 100dvh resolves short on iOS standalone — so the dock
-     never floats above the bottom. */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /* In-flow last child of the full-height flex column — sits at the true
+     bottom because body now fills the real screen height. */
+  flex-shrink: 0;
   z-index: 200;
   background: rgba(13, 13, 15, 0.92);
   backdrop-filter: blur(20px);
@@ -947,7 +957,7 @@ body {
   }
   .tagline { display: none; }
   .main {
-    padding: 0 1rem calc(3.5rem + var(--safe-bottom));
+    padding: 0 1rem 1.5rem;
     padding-right: max(1rem, var(--safe-right));
     padding-left: max(1rem, var(--safe-left));
   }
@@ -969,7 +979,7 @@ body {
   }
   .header-date { display: none; }
   .main {
-    padding: 0 0.75rem calc(3.5rem + var(--safe-bottom));
+    padding: 0 0.75rem 1.25rem;
     padding-right: max(0.75rem, var(--safe-right));
     padding-left: max(0.75rem, var(--safe-left));
   }
@@ -1002,7 +1012,7 @@ body {
     padding-left: max(0.75rem, var(--safe-left));
   }
   .main {
-    padding: 0 0.5rem calc(3.5rem + var(--safe-bottom));
+    padding: 0 0.5rem 1rem;
     padding-right: max(0.5rem, var(--safe-right));
     padding-left: max(0.5rem, var(--safe-left));
   }
