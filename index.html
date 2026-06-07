@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
   <div class="logo"><img src="icon.png" class="logo-icon" alt=""> Burn It</div>
   <div class="tagline">burnout prediction — before it's too late</div>
   <div class="header-date" id="headerDate"></div>
-  <span class="build-tag">build 6</span>
+  <span class="build-tag">build 7</span>
 </header>
 
 <div id="warningBanner" class="warning-banner" style="display:none"></div>
@@ -277,7 +277,37 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=6"></script>
-<script src="app.js?v=6"></script>
+<script src="dotfield.js?v=7"></script>
+<script src="app.js?v=7"></script>
+
+<!-- TEMP DIAGNOSTIC (build 7) — remove after measuring -->
+<div id="dbgTop" style="position:fixed;top:0;left:0;right:0;height:3px;background:red;z-index:99999;pointer-events:none"></div>
+<div id="dbgBot" style="position:fixed;bottom:0;left:0;right:0;height:3px;background:#0f0;z-index:99999;pointer-events:none"></div>
+<div id="dbg" style="position:fixed;top:40%;left:8px;right:8px;z-index:99999;font:13px/1.5 monospace;color:#0f0;background:rgba(0,0,0,.9);border:1px solid #0f0;padding:8px;border-radius:6px;pointer-events:none;white-space:pre-line"></div>
+<script>
+(function(){
+  var d=document.getElementById('dbg');
+  function upd(){
+    var vv=window.visualViewport||{};
+    var cs=getComputedStyle(document.documentElement);
+    var nav=document.querySelector('.mobile-nav');
+    var navRect=nav?nav.getBoundingClientRect():{bottom:0};
+    d.textContent=[
+      'innerHeight   '+window.innerHeight,
+      'docClientH    '+document.documentElement.clientHeight,
+      'bodyOffsetH   '+document.body.offsetHeight,
+      'screen.height '+screen.height,
+      'visualVP.h    '+Math.round(vv.height||0),
+      'dpr           '+window.devicePixelRatio,
+      'standalone    '+(window.navigator.standalone),
+      'dockBottomY   '+Math.round(navRect.bottom),
+      'safe-bottom   '+cs.getPropertyValue('--safe-bottom').trim()
+    ].join('\n');
+  }
+  upd();
+  window.addEventListener('resize',upd);
+  if(window.visualViewport){window.visualViewport.addEventListener('resize',upd);window.visualViewport.addEventListener('scroll',upd);}
+})();
+</script>
 </body>
 </html>
