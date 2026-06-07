@@ -13,6 +13,23 @@
   --yellow: #f59e0b;
   --purple: #818cf8;
   --pink: #f472b6;
+
+  /* iOS safe areas (Dynamic Island / notch / home-indicator dock).
+     Default to 0 so non-iOS layouts are unaffected; overridden by the
+     real env() values on devices that report them. */
+  --safe-top: 0px;
+  --safe-right: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
+}
+
+@supports (top: env(safe-area-inset-top)) {
+  :root {
+    --safe-top: env(safe-area-inset-top);
+    --safe-right: env(safe-area-inset-right);
+    --safe-bottom: env(safe-area-inset-bottom);
+    --safe-left: env(safe-area-inset-left);
+  }
 }
 
 html {
@@ -45,7 +62,9 @@ body {
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
   padding: 1.25rem 2rem;
-  padding-top: max(1.25rem, env(safe-area-inset-top));
+  padding-top: max(1.25rem, var(--safe-top));
+  padding-right: max(2rem, var(--safe-right));
+  padding-left: max(2rem, var(--safe-left));
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -91,6 +110,8 @@ body {
   border-bottom: 1px solid rgba(239, 68, 68, 0.25);
   color: #fca5a5;
   padding: 0.75rem 2rem;
+  padding-right: max(2rem, var(--safe-right));
+  padding-left: max(2rem, var(--safe-left));
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -117,6 +138,8 @@ body {
   max-width: 1160px;
   margin: 0 auto;
   padding: 0 2rem 2rem;
+  padding-right: max(2rem, var(--safe-right));
+  padding-left: max(2rem, var(--safe-left));
   /* Sole scroll region of the app shell */
   flex: 1 1 auto;
   min-height: 0;
@@ -860,9 +883,9 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  padding-bottom: max(env(safe-area-inset-bottom), 0.25rem);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  padding-bottom: max(var(--safe-bottom), 0.25rem);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 
 .mobile-nav .page-tab {
@@ -898,7 +921,11 @@ body {
 
 /* ── Responsive: tablets (≤900px) ── */
 @media (max-width: 900px) {
-  .main { padding: 0 1.25rem 2rem; }
+  .main {
+    padding: 0 1.25rem 2rem;
+    padding-right: max(1.25rem, var(--safe-right));
+    padding-left: max(1.25rem, var(--safe-left));
+  }
   .risk-layout { grid-template-columns: 1fr; gap: 1rem; }
   #gaugeContainer { width: 100%; max-width: 220px; }
 }
@@ -906,11 +933,15 @@ body {
 /* ── Responsive: small tablets / large phones (≤760px) ── */
 @media (max-width: 760px) {
   .header {
-    padding: max(0.875rem, env(safe-area-inset-top)) 1rem 0.875rem;
+    padding: max(0.875rem, var(--safe-top)) max(1rem, var(--safe-right)) 0.875rem max(1rem, var(--safe-left));
     gap: 0.75rem;
   }
   .tagline { display: none; }
-  .main { padding: 0 1rem 1.5rem; }
+  .main {
+    padding: 0 1rem 1.5rem;
+    padding-right: max(1rem, var(--safe-right));
+    padding-left: max(1rem, var(--safe-left));
+  }
   .page-tab-bar { display: none; }
   .mobile-nav { display: flex; }
   .chart-wrapper { height: 180px; }
@@ -921,9 +952,18 @@ body {
 
 /* ── Responsive: phones (≤480px) ── */
 @media (max-width: 480px) {
-  .header { padding: 0.75rem; }
+  .header {
+    padding: 0.75rem;
+    padding-top: max(0.75rem, var(--safe-top));
+    padding-right: max(0.75rem, var(--safe-right));
+    padding-left: max(0.75rem, var(--safe-left));
+  }
   .header-date { display: none; }
-  .main { padding: 0 0.75rem 1.25rem; }
+  .main {
+    padding: 0 0.75rem 1.25rem;
+    padding-right: max(0.75rem, var(--safe-right));
+    padding-left: max(0.75rem, var(--safe-left));
+  }
   .page-tab { padding: 0.625rem 0.75rem; font-size: 0.8rem; }
   .page-tab-bar { margin-bottom: 1.25rem; }
   .card { padding: 1rem; }
@@ -946,8 +986,17 @@ body {
 /* ── Responsive: small phones (≤360px) ── */
 @media (max-width: 360px) {
   .logo { font-size: 1.125rem; }
-  .header { padding: 0.625rem 0.75rem; }
-  .main { padding: 0 0.5rem 1rem; }
+  .header {
+    padding: 0.625rem 0.75rem;
+    padding-top: max(0.625rem, var(--safe-top));
+    padding-right: max(0.75rem, var(--safe-right));
+    padding-left: max(0.75rem, var(--safe-left));
+  }
+  .main {
+    padding: 0 0.5rem 1rem;
+    padding-right: max(0.5rem, var(--safe-right));
+    padding-left: max(0.5rem, var(--safe-left));
+  }
   .card { padding: 0.875rem; }
   .page-tab { padding: 0.5rem 0.625rem; font-size: 0.75rem; }
   .form-group-inline { gap: 0.5rem; }
