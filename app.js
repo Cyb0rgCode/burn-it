@@ -722,6 +722,9 @@ document.querySelectorAll('.page-tab').forEach(tab => {
     document.querySelectorAll('.page-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll(`.page-tab[data-page="${page}"]`).forEach(t => t.classList.add('active'));
     document.getElementById('page-' + page).classList.add('active');
+    // App-shell scrolls .main (not the window) — start each tab at the top
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.scrollTop = 0;
     if (page === 'trends') {
       const entries = getEntries();
       if (entries.length > 0) renderCharts(entries);
