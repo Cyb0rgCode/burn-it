@@ -16,20 +16,20 @@ No account. No server. All data lives in your browser's `localStorage`.
 
 ## Scoring model
 
-| Factor | Max pts | What triggers a penalty |
+| Factor | Max pts | Penalty starts at |
 |---|:---:|---|
-| Sleep duration | 16 | < 7.5h avg over 7 days |
-| Work hours | 15 | > 6h/day avg |
-| Stress level | 12 | avg > 4/10, rising trend |
-| Screen time | 10 | > 8h/day avg |
-| Mood | 10 | avg < 7/10, falling trend |
-| Motivation | 10 | avg < 7/10, falling trend |
-| Output quality | 8 | avg < 7/10, falling trend |
+| Sleep duration | 16 | < 7.5h avg — max at < 5h |
+| Work hours | 15 | > 7h avg — max at > 12h |
+| Stress level | 12 | avg > 4/10 + rising trend |
+| Screen time | 10 | > 10h avg — max at > 14h |
+| Mood | 10 | avg < 7/10 + falling trend |
+| Motivation | 10 | avg < 7/10 + falling trend |
+| Output quality | 8 | avg < 7/10 + falling trend |
 | Evening work | 6 | > 20% of days |
 | Exercise | 5 | < 45 min/day avg |
-| Outdoor time | 4 | < 30 min/day avg |
-| Social time | 3 | < 30 min/day avg |
-| Caffeine | 1 | > 8 cups/day avg |
+| Social time | 6 | < 2h/day avg — max at 0 |
+| Outdoor time | 4 | < 1h/day avg |
+| Caffeine | 2 | > 4 cups/day avg |
 
 **Risk bands**
 

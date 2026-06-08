@@ -102,11 +102,11 @@ function calcBurnoutScore(entries) {
   const avgWork = wkVals.length > 0 ? avg(wkVals) : null;
   let workP = 0;
   if (avgWork != null) {
-    if      (avgWork > 10) workP = 15;
-    else if (avgWork > 9)  workP = 12;
-    else if (avgWork > 8)  workP = 8;
-    else if (avgWork > 7)  workP = 4;
-    else if (avgWork > 6)  workP = 1;
+    if      (avgWork > 12) workP = 15;
+    else if (avgWork > 10) workP = 12;
+    else if (avgWork > 9)  workP = 8;
+    else if (avgWork > 8)  workP = 4;
+    else if (avgWork > 7)  workP = 1;
   }
 
   // Stress (0–12) — optional, level + trend
@@ -128,9 +128,9 @@ function calcBurnoutScore(entries) {
   let screenP = 0;
   if      (avgScreen > 14) screenP = 10;
   else if (avgScreen > 12) screenP = 8;
-  else if (avgScreen > 10) screenP = 5;
-  else if (avgScreen > 9)  screenP = 2;
-  else if (avgScreen > 8)  screenP = 1;
+  else if (avgScreen > 11) screenP = 5;
+  else if (avgScreen > 10) screenP = 2;
+  // ≤10h not penalised — covers a full work day + 2h leisure
 
   // Mood (0–10) — level + trend
   const avgMood   = avg(recent.map(e => e.mood));
@@ -209,16 +209,20 @@ function calcBurnoutScore(entries) {
   const avgSocial = soVals.length > 0 ? avg(soVals) : null;
   let socialP = 0;
   if (avgSocial != null) {
-    if      (avgSocial === 0)  socialP = 3;
-    else if (avgSocial < 0.5)  socialP = 2;
-    else if (avgSocial < 1)    socialP = 1;
+    if      (avgSocial === 0)  socialP = 6;
+    else if (avgSocial < 0.5)  socialP = 4;
+    else if (avgSocial < 1)    socialP = 2;
+    else if (avgSocial < 2)    socialP = 1;
   }
 
   // Caffeine (0–1) — optional
   const caVals      = recent.filter(e => e.caffeine != null).map(e => e.caffeine);
   const avgCaffeine = caVals.length > 0 ? avg(caVals) : null;
   let caffeineP = 0;
-  if (avgCaffeine != null && avgCaffeine > 8) caffeineP = 1;
+  if (avgCaffeine != null) {
+    if      (avgCaffeine > 6) caffeineP = 2;
+    else if (avgCaffeine > 4) caffeineP = 1;
+  }
 
   const total = Math.min(
     sleepP + workP + stressP + screenP + moodP + motivP +
@@ -324,8 +328,8 @@ function renderBreakdown(s) {
     { label: '🌙 Eve. Work',   value: s.eveningP,  max: 6,  detail: s.ewRate         != null ? `${Math.round(s.ewRate * 100)}% of days` : 'no data' },
     { label: '🏃 Exercise',    value: s.exerciseP, max: 5,  detail: s.avgExercise    != null ? `avg ${fmtTime(s.avgExercise)}` : 'no data' },
     { label: '🌿 Outdoor',     value: s.outdoorP,  max: 4,  detail: s.avgOutdoor     != null ? `avg ${fmtTime(s.avgOutdoor)}` : 'no data' },
-    { label: '👥 Social',      value: s.socialP,   max: 3,  detail: s.avgSocial      != null ? `avg ${fmtTime(s.avgSocial)}` : 'no data' },
-    { label: '☕ Caffeine',    value: s.caffeineP, max: 1,  detail: s.avgCaffeine    != null ? `avg ${s.avgCaffeine.toFixed(1)} cups` : 'no data' },
+    { label: '👥 Social',      value: s.socialP,   max: 6,  detail: s.avgSocial      != null ? `avg ${fmtTime(s.avgSocial)}` : 'no data' },
+    { label: '☕ Caffeine',    value: s.caffeineP, max: 2,  detail: s.avgCaffeine    != null ? `avg ${s.avgCaffeine.toFixed(1)} cups` : 'no data' },
   ];
 
   return `
@@ -617,9 +621,10 @@ function buildActionPlanHTML(s, score, risk) {
   else if (sleepP >= 6)  add(sleepP,    'This week', '😴', 'Push bedtime 30 min earlier',                 `avg ${fmtTime(avgSleep)} — small change, big returns`);
   else if (sleepP >= 2)  add(sleepP,    'This week', '😴', 'Lock in a consistent wake time',              'Regularity matters more than total hours');
 
-  if      (workP >= 12)  add(workP,     'Today',     '💼', 'Hard stop at 6pm — close everything',         `avg ${fmtTime(avgWork)} work/day is the primary driver`);
-  else if (workP >= 8)   add(workP,     'This week', '💼', 'Cap at 8h and block one easy day',            `avg ${fmtTime(avgWork)} — one lighter day resets capacity`);
-  else if (workP >= 4)   add(workP,     'This week', '💼', 'Leave one task unfinished on purpose today',  'Trains the brain to stop — reduces perfectionism load');
+  if      (workP >= 12)  add(workP,     'Today',     '💼', 'Stop working now — protect the rest of this day', `avg ${fmtTime(avgWork)} work/day — far above safe threshold`);
+  else if (workP >= 8)   add(workP,     'Today',     '💼', 'Hard stop at 8pm — no exceptions',            `avg ${fmtTime(avgWork)}/day — cut 1–2h off daily to recover`);
+  else if (workP >= 4)   add(workP,     'This week', '💼', 'Cap work at 8h and take one easy day',        `avg ${fmtTime(avgWork)}/day — slightly over threshold`);
+  else if (workP >= 1)   add(workP,     'This week', '💼', 'Watch your hours — slight creep detected',    `avg ${fmtTime(avgWork)}/day — keep this from trending up`);
 
   if      (stressP >= 8) add(stressP,   'Today',     '😤', '20 min decompression — mandatory',            `avg stress ${avgStress?.toFixed(1)}/10 — walk, breathe, or journal`);
   else if (stressP >= 5) add(stressP,   'Today',     '😤', 'Write down your #1 stressor + one action',    `avg stress ${avgStress?.toFixed(1)}/10 — externalizing it shrinks it`);
@@ -651,8 +656,9 @@ function buildActionPlanHTML(s, score, risk) {
   if      (outdoorP >= 4) add(outdoorP, 'Today',     '🌿', 'Step outside for at least 10 min',            'No outdoor time — natural light resets cortisol and circadian rhythm');
   else if (outdoorP >= 2) add(outdoorP, 'This week', '🌿', 'Eat one meal outside this week',              'Lowest-friction way to add outdoor time to a packed schedule');
 
-  if      (socialP >= 3) add(socialP,   'Today',     '👥', 'Text or call one person — 10 min minimum',   'Isolation amplifies every other risk factor — connection is protective');
-  else if (socialP >= 2) add(socialP,   'This week', '👥', 'Schedule one social touchpoint this week',    'Even brief contact buffers against burnout progression');
+  if      (socialP >= 5) add(socialP,   'Today',     '👥', 'Reach out to 2 people today — call, not text', 'Zero social time is accelerating every other risk factor');
+  else if (socialP >= 3) add(socialP,   'Today',     '👥', 'Text or call one person — 10 min minimum',    'Isolation amplifies every other risk factor — connection is protective');
+  else if (socialP >= 1) add(socialP,   'This week', '👥', 'Schedule one social touchpoint this week',    'Even brief contact buffers against burnout progression');
 
   const limit = score >= 72 ? 5 : score >= 50 ? 4 : 3;
   const top   = A.sort((a, b) => b.w - a.w).slice(0, limit);
