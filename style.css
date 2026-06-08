@@ -263,6 +263,23 @@ body {
   color: var(--text);
 }
 
+/* ── Log header row (title + date picker) ── */
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.log-date-input {
+  width: auto !important;
+  font-size: 0.8125rem !important;
+  padding: 0.4rem 0.625rem !important;
+  color-scheme: dark;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* ── Log form ── */
 .form-group { margin-bottom: 0.875rem; }
 

@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -22,7 +22,6 @@
   <div class="logo"><img src="icon.png" class="logo-icon" alt=""> Burn It</div>
   <div class="tagline">burnout prediction — before it's too late</div>
   <div class="header-date" id="headerDate"></div>
-  <span class="build-tag">b8</span>
 </header>
 
 <div id="warningBanner" class="warning-banner" style="display:none"></div>
@@ -41,7 +40,10 @@
   <div class="page-pane active" id="page-log">
     <div class="form-container">
       <div class="card">
-        <div class="card-title">Log Today</div>
+        <div class="log-header">
+          <div class="card-title" style="margin-bottom:0">Log Entry</div>
+          <input type="date" id="logDate" class="form-input log-date-input">
+        </div>
         <form id="logForm">
 
           <div class="form-grid">
@@ -194,6 +196,10 @@
   <!-- ── Trends tab ── -->
   <div class="page-pane" id="page-trends">
     <div class="trends-stack">
+      <div class="card" id="burnoutChartSection" style="display:none">
+        <div class="card-title">Burnout Score — History</div>
+        <div class="chart-wrapper"><canvas id="burnoutChart"></canvas></div>
+      </div>
       <div class="card" id="chartSection" style="display:none">
         <div class="card-title">Sleep, Work, Screen &amp; Social — 14 days</div>
         <div class="chart-wrapper">
@@ -277,22 +283,8 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=8"></script>
-<script src="app.js?v=8"></script>
+<script src="dotfield.js?v=9"></script>
+<script src="app.js?v=9"></script>
 
-<!-- tiny build/viewport marker in the header — remove once confirmed -->
-<script>
-(function(){
-  var tag=document.querySelector('.build-tag');
-  if(!tag) return;
-  function upd(){
-    var sb=getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom').trim();
-    tag.textContent='b8 · h'+window.innerHeight+' sb'+sb;
-  }
-  upd();
-  window.addEventListener('resize',upd);
-  if(window.visualViewport) window.visualViewport.addEventListener('resize',upd);
-})();
-</script>
 </body>
 </html>

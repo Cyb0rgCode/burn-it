@@ -349,6 +349,137 @@ function renderBreakdown(s) {
 
 let timeChart = null;
 let wellChart = null;
+let burnChart = null;
+
+// ── Form helpers ─────────────────────────────────────────
+
+function populateFormFromEntry(entry) {
+  fromDecimal(entry.sleep,           'sleepHr',    'sleepMin');
+  fromDecimal(entry.work    ?? 0,    'workHr',     'workMin');
+  fromDecimal(entry.screenTime,      'screenHr',   'screenMin');
+  fromDecimal(entry.social  ?? 0,    'socialHr',   'socialMin');
+  fromDecimal(entry.exercise ?? 0,   'exerciseHr', 'exerciseMin');
+  fromDecimal(entry.outdoor ?? 0,    'outdoorHr',  'outdoorMin');
+  document.getElementById('caffeineInput').value           = entry.caffeine   ?? 0;
+  document.getElementById('caffeineDisplay').textContent   = entry.caffeine   ?? 0;
+  document.getElementById('outputInput').value             = entry.output;
+  document.getElementById('moodInput').value               = entry.mood;
+  document.getElementById('outputDisplay').textContent     = entry.output;
+  document.getElementById('moodDisplay').textContent       = entry.mood;
+  const si = entry.stress     ?? 5;
+  const mi = entry.motivation ?? 5;
+  document.getElementById('stressInput').value             = si;
+  document.getElementById('motivationInput').value         = mi;
+  document.getElementById('stressDisplay').textContent     = si;
+  document.getElementById('motivationDisplay').textContent = mi;
+  const ew = entry.eveningWork ?? false;
+  document.getElementById('eveningWorkInput').checked      = ew;
+  document.getElementById('eveningWorkLabel').textContent  = ew ? 'Yes' : 'No';
+  document.getElementById('eveningWorkLabel').style.color  = ew ? 'var(--orange)' : '';
+}
+
+function clearFormFields() {
+  ['sleepHr','sleepMin','workHr','workMin','screenHr','screenMin',
+   'socialHr','socialMin','exerciseHr','exerciseMin','outdoorHr','outdoorMin'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('caffeineInput').value           = 0;
+  document.getElementById('caffeineDisplay').textContent   = 0;
+  document.getElementById('outputInput').value             = 5;
+  document.getElementById('moodInput').value               = 5;
+  document.getElementById('stressInput').value             = 5;
+  document.getElementById('motivationInput').value         = 5;
+  document.getElementById('outputDisplay').textContent     = 5;
+  document.getElementById('moodDisplay').textContent       = 5;
+  document.getElementById('stressDisplay').textContent     = 5;
+  document.getElementById('motivationDisplay').textContent = 5;
+  document.getElementById('eveningWorkInput').checked      = false;
+  document.getElementById('eveningWorkLabel').textContent  = 'No';
+  document.getElementById('eveningWorkLabel').style.color  = '';
+}
+
+function syncFormState(entries) {
+  const logDateEl = document.getElementById('logDate');
+  if (!logDateEl) return;
+  const dateStr   = logDateEl.value || today();
+  const entry     = entries.find(e => e.date === dateStr);
+  const logBtn    = document.getElementById('logBtn');
+  const logStatus = document.getElementById('logStatus');
+  const isToday   = dateStr === today();
+  const label     = isToday ? 'Today' : formatDate(dateStr);
+
+  if (entry) {
+    logBtn.textContent    = `Update ${label}`;
+    logStatus.textContent = `✓ Already logged ${isToday ? 'today' : label}`;
+    logStatus.style.color = '#22c55e';
+    populateFormFromEntry(entry);
+  } else {
+    logBtn.textContent    = `Log ${label}`;
+    logStatus.textContent = '';
+  }
+}
+
+// ── Burnout history chart ─────────────────────────────────
+
+function renderBurnoutChart(entries) {
+  const section = document.getElementById('burnoutChartSection');
+  if (!section) return;
+  if (entries.length < 3) { section.style.display = 'none'; return; }
+
+  const labels = [];
+  const scores = [];
+  for (let i = 2; i < entries.length; i++) {
+    const s = calcBurnoutScore(entries.slice(0, i + 1));
+    if (s !== null) {
+      labels.push(formatDate(entries[i].date));
+      scores.push(Math.round(s.total));
+    }
+  }
+  if (scores.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const ctx = document.getElementById('burnoutChart').getContext('2d');
+  if (burnChart) burnChart.destroy();
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 220);
+  grad.addColorStop(0, 'rgba(249,115,22,0.28)');
+  grad.addColorStop(1, 'rgba(249,115,22,0)');
+
+  burnChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Burnout Score',
+        data: scores,
+        borderColor: '#f97316',
+        backgroundColor: grad,
+        tension: 0.4,
+        pointRadius: 3,
+        fill: true,
+        pointBackgroundColor: scores.map(v => riskInfo(v).color),
+        pointBorderColor:     scores.map(v => riskInfo(v).color),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#6b7280', font: { family: 'Inter,system-ui,sans-serif', size: 12 }, boxWidth: 12, padding: 14 } },
+        tooltip: {
+          backgroundColor: '#1c1c22', borderColor: '#26262f', borderWidth: 1,
+          titleColor: '#e5e5e7', bodyColor: '#9ca3af',
+          callbacks: { label: ctx => `Score: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK` },
+        },
+      },
+      scales: {
+        x: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 } } },
+        y: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 }, stepSize: 25 }, min: 0, max: 100 },
+      },
+    },
+  });
+}
 
 const chartOpts = (yMax) => ({
   responsive: true,
@@ -641,6 +772,7 @@ function render() {
   const hasData         = entries.length > 0;
   const trendsPaneActive = document.getElementById('page-trends').classList.contains('active');
 
+  document.getElementById('burnoutChartSection').style.display = entries.length >= 3 ? 'block' : 'none';
   document.getElementById('chartSection').style.display       = hasData ? 'block' : 'none';
   document.getElementById('healthChartSection').style.display = hasData ? 'block' : 'none';
   document.getElementById('trendsEmpty').style.display        = hasData ? 'none'  : 'flex';
@@ -648,46 +780,14 @@ function render() {
   document.getElementById('historyEmpty').style.display       = hasData ? 'none'  : 'flex';
 
   if (hasData) {
-    if (trendsPaneActive) renderCharts(entries);
+    if (trendsPaneActive) {
+      renderCharts(entries);
+      if (entries.length >= 3) renderBurnoutChart(entries);
+    }
     renderHistory(entries);
   }
 
-  // Sync log form with today's entry if it exists
-  const t  = today();
-  const te = entries.find(e => e.date === t);
-  const logBtn    = document.getElementById('logBtn');
-  const logStatus = document.getElementById('logStatus');
-
-  if (te) {
-    logBtn.textContent      = 'Update Today';
-    logStatus.textContent   = '✓ Already logged today';
-    logStatus.style.color   = '#22c55e';
-    fromDecimal(te.sleep,         'sleepHr',    'sleepMin');
-    fromDecimal(te.work    ?? 0,  'workHr',     'workMin');
-    fromDecimal(te.screenTime,    'screenHr',   'screenMin');
-    fromDecimal(te.social  ?? 0,  'socialHr',   'socialMin');
-    fromDecimal(te.exercise ?? 0, 'exerciseHr', 'exerciseMin');
-    fromDecimal(te.outdoor ?? 0,  'outdoorHr',  'outdoorMin');
-    document.getElementById('caffeineInput').value          = te.caffeine   ?? 0;
-    document.getElementById('caffeineDisplay').textContent  = te.caffeine   ?? 0;
-    document.getElementById('outputInput').value            = te.output;
-    document.getElementById('moodInput').value              = te.mood;
-    document.getElementById('outputDisplay').textContent    = te.output;
-    document.getElementById('moodDisplay').textContent      = te.mood;
-    const si = te.stress ?? 5;
-    const mi = te.motivation ?? 5;
-    document.getElementById('stressInput').value            = si;
-    document.getElementById('motivationInput').value        = mi;
-    document.getElementById('stressDisplay').textContent    = si;
-    document.getElementById('motivationDisplay').textContent = mi;
-    const ew = te.eveningWork ?? false;
-    document.getElementById('eveningWorkInput').checked     = ew;
-    document.getElementById('eveningWorkLabel').textContent = ew ? 'Yes' : 'No';
-    document.getElementById('eveningWorkLabel').style.color = ew ? 'var(--orange)' : '';
-  } else {
-    logBtn.textContent    = 'Log Today';
-    logStatus.textContent = '';
-  }
+  syncFormState(entries);
 }
 
 // ── Form ─────────────────────────────────────────────────
@@ -710,7 +810,8 @@ document.getElementById('logForm').addEventListener('submit', e => {
 
   if ([caffeine, output, mood, stress, motivation].some(isNaN)) return;
 
-  saveEntry({ date: today(), sleep, work, screenTime, eveningWork, social, exercise, outdoor, caffeine, output, mood, stress, motivation });
+  const logDateVal = document.getElementById('logDate').value || today();
+  saveEntry({ date: logDateVal, sleep, work, screenTime, eveningWork, social, exercise, outdoor, caffeine, output, mood, stress, motivation });
   render();
 });
 
@@ -728,6 +829,7 @@ document.querySelectorAll('.page-tab').forEach(tab => {
     if (page === 'trends') {
       const entries = getEntries();
       if (entries.length > 0) renderCharts(entries);
+      if (entries.length >= 3) renderBurnoutChart(entries);
     }
   });
 });
@@ -793,23 +895,9 @@ document.getElementById('demoBtn').addEventListener('click', () => {
 
 document.getElementById('clearBtn').addEventListener('click', () => {
   clearAll();
-  ['sleepHr','sleepMin','workHr','workMin','screenHr','screenMin',
-   'socialHr','socialMin','exerciseHr','exerciseMin','outdoorHr','outdoorMin'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('caffeineInput').value          = 0;
-  document.getElementById('caffeineDisplay').textContent  = 0;
-  document.getElementById('outputInput').value            = 5;
-  document.getElementById('moodInput').value              = 5;
-  document.getElementById('stressInput').value            = 5;
-  document.getElementById('motivationInput').value        = 5;
-  document.getElementById('outputDisplay').textContent    = 5;
-  document.getElementById('moodDisplay').textContent      = 5;
-  document.getElementById('stressDisplay').textContent    = 5;
-  document.getElementById('motivationDisplay').textContent = 5;
-  document.getElementById('eveningWorkInput').checked     = false;
-  document.getElementById('eveningWorkLabel').textContent = 'No';
-  document.getElementById('eveningWorkLabel').style.color = '';
+  const _ld = document.getElementById('logDate');
+  if (_ld) { _ld.value = today(); _ld.max = today(); }
+  clearFormFields();
   render();
 });
 
@@ -818,5 +906,31 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', {
   weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
+
+// ── Log date picker ───────────────────────────────────────
+(function () {
+  const el = document.getElementById('logDate');
+  if (!el) return;
+  el.value = today();
+  el.max   = today();
+  el.addEventListener('change', function () {
+    const entries = getEntries();
+    const entry   = entries.find(e => e.date === this.value);
+    const isToday = this.value === today();
+    const label   = isToday ? 'Today' : formatDate(this.value);
+    const logBtn    = document.getElementById('logBtn');
+    const logStatus = document.getElementById('logStatus');
+    if (entry) {
+      populateFormFromEntry(entry);
+      logBtn.textContent    = `Update ${label}`;
+      logStatus.textContent = `✓ Already logged ${isToday ? 'today' : label}`;
+      logStatus.style.color = '#22c55e';
+    } else {
+      clearFormFields();
+      logBtn.textContent    = `Log ${label}`;
+      logStatus.textContent = '';
+    }
+  });
+})();
 
 render();
