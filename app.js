@@ -293,7 +293,7 @@ function renderGauge(score) {
         </clipPath>
       </defs>
       <g clip-path="url(#gc)">
-        <path d="${bgD}" fill="none" stroke="#26262f" stroke-width="${sw}" stroke-linecap="round"/>
+        <path d="${bgD}" fill="none" stroke="${isLight() ? '#ddd8d0' : '#26262f'}" stroke-width="${sw}" stroke-linecap="round"/>
         ${progEl}
       </g>
       <text x="100" y="70" text-anchor="middle" fill="${risk.color}" font-size="30" font-weight="800" font-family="Inter,system-ui,sans-serif">${score}</text>
@@ -461,39 +461,41 @@ function renderBurnoutChart(entries) {
         pointBorderColor:     scores.map(v => riskInfo(v).color),
       }],
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { color: '#6b7280', font: { family: 'Inter,system-ui,sans-serif', size: 12 }, boxWidth: 12, padding: 14 } },
-        tooltip: {
-          backgroundColor: '#1c1c22', borderColor: '#26262f', borderWidth: 1,
-          titleColor: '#e5e5e7', bodyColor: '#9ca3af',
-          callbacks: { label: ctx => `Score: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK` },
-        },
-      },
-      scales: {
-        x: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 } } },
-        y: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 }, stepSize: 25 }, min: 0, max: 100 },
-      },
-    },
+    options: (() => {
+      const o = chartOpts(100);
+      o.plugins.tooltip.callbacks = { label: ctx => `Score: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK` };
+      o.scales.y.ticks = { ...o.scales.y.ticks, stepSize: 25 };
+      return o;
+    })(),
   });
 }
 
-const chartOpts = (yMax) => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index', intersect: false },
-  plugins: {
-    legend: { labels: { color: '#6b7280', font: { family: 'Inter,system-ui,sans-serif', size: 12 }, boxWidth: 12, padding: 14 } },
-    tooltip: { backgroundColor: '#1c1c22', borderColor: '#26262f', borderWidth: 1, titleColor: '#e5e5e7', bodyColor: '#9ca3af' },
-  },
-  scales: {
-    x: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 } } },
-    y: { grid: { color: '#1e1e26' }, ticks: { color: '#4b5563', font: { size: 11 } }, min: 0, max: yMax },
-  },
-});
+function isLight() {
+  return document.documentElement.getAttribute('data-theme') === 'light';
+}
+
+const chartOpts = (yMax) => {
+  const lt = isLight();
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: lt ? '#8b7d73' : '#6b7280', font: { family: 'Inter,system-ui,sans-serif', size: 12 }, boxWidth: 12, padding: 14 } },
+      tooltip: {
+        backgroundColor: lt ? '#fffdfb' : '#1c1c22',
+        borderColor:     lt ? '#ddd8d0' : '#26262f',
+        borderWidth: 1,
+        titleColor:  lt ? '#1c1714' : '#e5e5e7',
+        bodyColor:   lt ? '#8b7d73' : '#9ca3af',
+      },
+    },
+    scales: {
+      x: { grid: { color: lt ? '#e8e2da' : '#1e1e26' }, ticks: { color: lt ? '#a89890' : '#4b5563', font: { size: 11 } } },
+      y: { grid: { color: lt ? '#e8e2da' : '#1e1e26' }, ticks: { color: lt ? '#a89890' : '#4b5563', font: { size: 11 } }, min: 0, max: yMax },
+    },
+  };
+};
 
 function renderCharts(entries) {
   const recent = entries.slice(-14);
@@ -924,6 +926,13 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 
   if (btn) btn.addEventListener('click', () => {
     apply(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    // Re-render theme-aware elements
+    render();
+    const entries = getEntries();
+    if (entries.length > 0 && document.getElementById('page-trends').classList.contains('active')) {
+      renderCharts(entries);
+      if (entries.length >= 3) renderBurnoutChart(entries);
+    }
   });
 })();
 
