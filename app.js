@@ -67,6 +67,12 @@ function avg(arr) {
   return arr.reduce((s, v) => s + v, 0) / arr.length;
 }
 
+function stdev(arr) {
+  if (arr.length < 2) return 0;
+  const m = avg(arr);
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
+}
+
 function linearSlope(arr) {
   const n = arr.length;
   if (n < 2) return 0;
@@ -80,22 +86,51 @@ function linearSlope(arr) {
   return den === 0 ? 0 : num / den;
 }
 
+// Weighted linear slope — recent points count proportionally more (weight = index+1)
+function weightedSlope(arr) {
+  const n = arr.length;
+  if (n < 2) return 0;
+  const w  = arr.map((_, i) => i + 1);
+  const ws = w.reduce((s, v) => s + v, 0);
+  const xMean = w.reduce((s, v, i) => s + v * i,      0) / ws;
+  const yMean = w.reduce((s, v, i) => s + v * arr[i], 0) / ws;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += w[i] * (i - xMean) * (arr[i] - yMean);
+    den += w[i] * (i - xMean) ** 2;
+  }
+  return den === 0 ? 0 : num / den;
+}
+
 // ── Burnout engine ───────────────────────────────────────
-// Weights: sleep 16 + work 15 + stress 12 + screen 10 + mood 10 + motivation 10
-//          + output 8 + eveningWork 6 + exercise 5 + outdoor 4 + social 3 + caffeine 1 = 100
+// Behavioural cluster  (objective):  sleep 16 + work 15 + screen 10 + eveningWork 6
+//                                    + exercise 5 + outdoor 4 + social 6 + caffeine 2  = 64
+// Subjective cluster   (self-report): stress 12 + mood 10 + motivation 10 + output 8  = 40
+//   → capped at 30 in the total to prevent correlated self-report from inflating score
+// Max possible total: 64 + 30 = 94 (hard cap at 100 anyway)
 
 function calcBurnoutScore(entries) {
   if (entries.length < 3) return null;
   const recent = entries.slice(-7);
 
-  // Sleep (0–16)
-  const avgSleep = avg(recent.map(e => e.sleep));
-  let sleepP = 0;
-  if      (avgSleep < 5)   sleepP = 16;
-  else if (avgSleep < 6)   sleepP = 13;
-  else if (avgSleep < 6.5) sleepP = 9;
-  else if (avgSleep < 7)   sleepP = 6;
-  else if (avgSleep < 7.5) sleepP = 2;
+  // Sleep (0–16): duration + consistency penalty
+  const sleepVals = recent.map(e => e.sleep);
+  const avgSleep  = avg(sleepVals);
+  const sleepStdev = stdev(sleepVals);
+
+  let sleepDurationP = 0;
+  if      (avgSleep < 5)   sleepDurationP = 14;
+  else if (avgSleep < 6)   sleepDurationP = 11;
+  else if (avgSleep < 6.5) sleepDurationP = 8;
+  else if (avgSleep < 7)   sleepDurationP = 5;
+  else if (avgSleep < 7.5) sleepDurationP = 2;
+
+  let sleepConsistencyP = 0;
+  if      (sleepStdev > 2.5) sleepConsistencyP = 4;
+  else if (sleepStdev > 1.5) sleepConsistencyP = 2;
+  else if (sleepStdev > 1.0) sleepConsistencyP = 1;
+
+  let sleepP = Math.min(16, sleepDurationP + sleepConsistencyP);
 
   // Work hours (0–15) — optional
   const wkVals  = recent.filter(e => e.work != null).map(e => e.work);
@@ -224,16 +259,23 @@ function calcBurnoutScore(entries) {
     else if (avgCaffeine > 4) caffeineP = 1;
   }
 
+  // Subjective cluster cap: stress+mood+motivation+output max 30
+  // (all four tank simultaneously in burnout — raw sum of 40 overstates the signal)
+  const subjectiveRaw    = stressP + moodP + motivP + outputP;
+  const subjectiveCapped = Math.min(subjectiveRaw, 30);
+
   const total = Math.min(
-    sleepP + workP + stressP + screenP + moodP + motivP +
-    outputP + eveningP + exerciseP + outdoorP + socialP + caffeineP,
+    sleepP + workP + subjectiveCapped + screenP +
+    eveningP + exerciseP + outdoorP + socialP + caffeineP,
     100
   );
 
   return {
     total,
-    sleepP, workP, stressP, screenP, moodP, motivP,
+    sleepP, sleepDurationP, sleepConsistencyP, sleepStdev,
+    workP, stressP, screenP, moodP, motivP,
     outputP, eveningP, exerciseP, outdoorP, socialP, caffeineP,
+    subjectiveRaw, subjectiveCapped,
     avgSleep, avgWork, avgStress, avgScreen, avgMood, avgMotivation,
     avgOutput, avgExercise, avgOutdoor, avgSocial, avgCaffeine,
     moodSlope, outputSlope, stressSlope, motivSlope, ewRate,
@@ -250,7 +292,7 @@ function projectScore(entries) {
   }
   if (scores.length < 3) return null;
 
-  const slope      = linearSlope(scores);
+  const slope      = weightedSlope(scores);   // recent days weighted higher
   const current    = scores[scores.length - 1];
   const projected7 = Math.max(0, Math.min(100, current + slope * 7));
 
@@ -608,7 +650,8 @@ function buildActionPlanHTML(s, score, risk) {
   }
 
   const {
-    sleepP, workP, stressP, screenP, moodP, motivP,
+    sleepP, sleepDurationP, sleepConsistencyP, sleepStdev,
+    workP, stressP, screenP, moodP, motivP,
     outputP, eveningP, exerciseP, outdoorP, socialP,
     avgSleep, avgWork, avgStress, avgScreen, avgMood, avgMotivation, avgOutput, ewRate,
   } = s;
@@ -616,10 +659,14 @@ function buildActionPlanHTML(s, score, risk) {
   const A = [];
   const add = (w, tf, icon, t, d) => A.push({ w, tf, icon, t, d });
 
-  if      (sleepP >= 13) add(sleepP,    'Tonight',   '😴', 'Sleep at least 8h tonight',                  `avg ${fmtTime(avgSleep)} — every extra hour cuts score ~5pts`);
-  else if (sleepP >= 9)  add(sleepP,    'Tonight',   '😴', 'Set bedtime 1h earlier — alarm set',          `avg ${fmtTime(avgSleep)} — hit 7.5h minimum`);
-  else if (sleepP >= 6)  add(sleepP,    'This week', '😴', 'Push bedtime 30 min earlier',                 `avg ${fmtTime(avgSleep)} — small change, big returns`);
-  else if (sleepP >= 2)  add(sleepP,    'This week', '😴', 'Lock in a consistent wake time',              'Regularity matters more than total hours');
+  if      (sleepDurationP >= 11) add(sleepDurationP, 'Tonight',   '😴', 'Sleep at least 8h tonight',             `avg ${fmtTime(avgSleep)} — every extra hour cuts score ~5pts`);
+  else if (sleepDurationP >= 8)  add(sleepDurationP, 'Tonight',   '😴', 'Set bedtime 1h earlier — alarm set',    `avg ${fmtTime(avgSleep)} — hit 7.5h minimum`);
+  else if (sleepDurationP >= 5)  add(sleepDurationP, 'This week', '😴', 'Push bedtime 30 min earlier',           `avg ${fmtTime(avgSleep)} — small change, big returns`);
+  else if (sleepDurationP >= 2)  add(sleepDurationP, 'This week', '😴', 'Add 30 min to your sleep target',       `avg ${fmtTime(avgSleep)} — approaching but below optimal`);
+
+  if      (sleepConsistencyP >= 4) add(sleepConsistencyP, 'This week', '🌙', 'Stabilize your sleep — same time every night', `±${sleepStdev?.toFixed(1)}h variance is disrupting deep sleep cycles`);
+  else if (sleepConsistencyP >= 2) add(sleepConsistencyP, 'This week', '🌙', 'Keep sleep duration consistent ±30 min',       `±${sleepStdev?.toFixed(1)}h variance — irregular schedule undermines recovery`);
+  else if (sleepConsistencyP >= 1) add(sleepConsistencyP, 'This week', '🌙', 'Tighten your sleep schedule',                  `±${sleepStdev?.toFixed(1)}h variance — consistency matters as much as duration`);
 
   if      (workP >= 12)  add(workP,     'Today',     '💼', 'Stop working now — protect the rest of this day', `avg ${fmtTime(avgWork)} work/day — far above safe threshold`);
   else if (workP >= 8)   add(workP,     'Today',     '💼', 'Hard stop at 8pm — no exceptions',            `avg ${fmtTime(avgWork)}/day — cut 1–2h off daily to recover`);
