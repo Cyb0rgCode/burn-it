@@ -908,6 +908,25 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
   weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
 
+// ── Theme toggle ─────────────────────────────────────────
+(function () {
+  const THEME_KEY = 'burnit_theme';
+  const btn = document.getElementById('themeToggle');
+
+  function apply(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
+    localStorage.setItem(THEME_KEY, theme);
+  }
+
+  // Sync button icon with current theme (already set by anti-flash script)
+  apply(document.documentElement.getAttribute('data-theme') || 'dark');
+
+  if (btn) btn.addEventListener('click', () => {
+    apply(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+})();
+
 // ── Log date picker ───────────────────────────────────────
 (function () {
   const el = document.getElementById('logDate');

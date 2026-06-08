@@ -14,7 +14,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
+  <script>
+    (function(){var t=localStorage.getItem('burnit_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
+  </script>
 </head>
 <body>
 
@@ -22,6 +25,7 @@
   <div class="logo"><img src="icon.png" class="logo-icon" alt=""> Burn It</div>
   <div class="tagline">burnout prediction — before it's too late</div>
   <div class="header-date" id="headerDate"></div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">☀️</button>
 </header>
 
 <div id="warningBanner" class="warning-banner" style="display:none"></div>
@@ -283,8 +287,8 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="dotfield.js?v=11"></script>
+<script src="app.js?v=11"></script>
 
 </body>
 </html>

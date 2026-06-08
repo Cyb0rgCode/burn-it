@@ -87,6 +87,7 @@ void main(){
 
   // ── Canvas (fixed fullscreen background) ──────────────
   const wrap = document.createElement('div');
+  wrap.id = 'bg-veil';
   wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden;background:#0d0d0f;';
 
   const canvas = document.createElement('canvas');

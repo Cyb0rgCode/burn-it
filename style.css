@@ -23,6 +23,66 @@
   --safe-left: 0px;
 }
 
+/* ── Light theme ─────────────────────────────────────────── */
+html[data-theme="light"] {
+  --bg:     #f2f1ee;
+  --card:   #ffffff;
+  --card2:  #e9e8e5;
+  --border: #d8d6d1;
+  --text:   #18181b;
+  --muted:  #71717a;
+}
+
+html[data-theme="light"] .card {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+html[data-theme="light"] .mobile-nav {
+  background: rgba(242, 241, 238, 0.96);
+}
+
+/* Hide the dark WebGL veil — light bg shows through body */
+html[data-theme="light"] #bg-veil {
+  opacity: 0 !important;
+}
+
+html[data-theme="light"] .forecast-arrow { color: #c8c5c0; }
+html[data-theme="light"] .delete-btn     { color: #b8b5af; }
+
+html[data-theme="light"] .toggle-slider::before {
+  background: #9ca3af;
+}
+
+/* Smooth theme transitions */
+html, body, .card, .header, .mobile-nav,
+.form-input, .action-item, .breakdown-bar,
+.stepper-btn, .log-btn, .demo-btn, .clear-btn,
+.theme-toggle, .page-tab-bar, .page-tab {
+  transition:
+    background-color 0.2s ease,
+    border-color     0.2s ease,
+    color            0.2s ease;
+}
+
+/* ── Theme toggle button ─────────────────────────────────── */
+.theme-toggle {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+  line-height: 1;
+  padding: 0;
+}
+.theme-toggle:hover { border-color: var(--orange); }
+
 @supports (top: env(safe-area-inset-top)) {
   :root {
     --safe-top: env(safe-area-inset-top);
