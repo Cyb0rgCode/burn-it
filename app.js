@@ -574,107 +574,108 @@ function renderHistory(entries) {
   });
 }
 
-// ── Tips ─────────────────────────────────────────────────
+// ── Action plan ──────────────────────────────────────────
 
-const TIP_LABELS = { '😴':'Sleep', '💼':'Work', '😤':'Stress', '💻':'Screen', '😊':'Mood', '🎯':'Motivation', '📊':'Output', '🌙':'Evening Work', '🏃':'Exercise', '🌿':'Outdoor', '👥':'Social' };
-function tipLabel(icon) { return TIP_LABELS[icon] || ''; }
+function tfBadge(tf) {
+  const map = { 'Now':'#ef4444','Today':'#ef4444','Tonight':'#818cf8','This week':'#f59e0b','Daily':'#22c55e','Weekly':'#22c55e' };
+  const c = map[tf] || '#6b7280';
+  return `<div class="action-timeframe" style="color:${c};border-color:${c}20;background:${c}12">${tf}</div>`;
+}
+
+function actionItem(tf, icon, title, desc) {
+  return `<div class="action-item">${tfBadge(tf)}<div class="action-body"><span class="action-title">${icon} ${title}</span><span class="action-desc">${desc}</span></div></div>`;
+}
+
+function buildActionPlanHTML(s, score, risk) {
+  if (score < 25) {
+    const items = [
+      ['Daily',  '😴', 'Keep your sleep schedule consistent',   'Same wake time every day — including weekends — is the #1 drift prevention'],
+      ['Daily',  '🏃', 'Maintain your current movement habit',  'Exercise is the most protective factor against future score increases'],
+      ['Weekly', '💼', 'Watch for work-hour creep',             'Burnout sneaks in through gradual overload — log daily to catch early drift'],
+      ['Weekly', '📅', 'Protect one full rest day per week',    'Non-negotiable recovery prevents the score from climbing back up'],
+    ];
+    return `
+      <div class="card-title" style="color:${risk.color}">✅ You're in the Green — Keep It There</div>
+      <div class="action-subtitle">Score ${score}/100. Protect what's working.</div>
+      <div class="action-list">${items.map(([tf,ic,t,d]) => actionItem(tf,ic,t,d)).join('')}</div>
+    `;
+  }
+
+  const {
+    sleepP, workP, stressP, screenP, moodP, motivP,
+    outputP, eveningP, exerciseP, outdoorP, socialP,
+    avgSleep, avgWork, avgStress, avgScreen, avgMood, avgMotivation, avgOutput, ewRate,
+  } = s;
+
+  const A = [];
+  const add = (w, tf, icon, t, d) => A.push({ w, tf, icon, t, d });
+
+  if      (sleepP >= 13) add(sleepP,    'Tonight',   '😴', 'Sleep at least 8h tonight',                  `avg ${fmtTime(avgSleep)} — every extra hour cuts score ~5pts`);
+  else if (sleepP >= 9)  add(sleepP,    'Tonight',   '😴', 'Set bedtime 1h earlier — alarm set',          `avg ${fmtTime(avgSleep)} — hit 7.5h minimum`);
+  else if (sleepP >= 6)  add(sleepP,    'This week', '😴', 'Push bedtime 30 min earlier',                 `avg ${fmtTime(avgSleep)} — small change, big returns`);
+  else if (sleepP >= 2)  add(sleepP,    'This week', '😴', 'Lock in a consistent wake time',              'Regularity matters more than total hours');
+
+  if      (workP >= 12)  add(workP,     'Today',     '💼', 'Hard stop at 6pm — close everything',         `avg ${fmtTime(avgWork)} work/day is the primary driver`);
+  else if (workP >= 8)   add(workP,     'This week', '💼', 'Cap at 8h and block one easy day',            `avg ${fmtTime(avgWork)} — one lighter day resets capacity`);
+  else if (workP >= 4)   add(workP,     'This week', '💼', 'Leave one task unfinished on purpose today',  'Trains the brain to stop — reduces perfectionism load');
+
+  if      (stressP >= 8) add(stressP,   'Today',     '😤', '20 min decompression — mandatory',            `avg stress ${avgStress?.toFixed(1)}/10 — walk, breathe, or journal`);
+  else if (stressP >= 5) add(stressP,   'Today',     '😤', 'Write down your #1 stressor + one action',    `avg stress ${avgStress?.toFixed(1)}/10 — externalizing it shrinks it`);
+  else if (stressP >= 2) add(stressP,   'This week', '😤', 'Add one daily decompression ritual',          '10 min of calm per day — consistency beats duration');
+
+  if      (screenP >= 8) add(screenP,   'Tonight',   '💻', 'No screens from dinner until bed',            `avg ${fmtTime(avgScreen)} screen time — cutoff improves sleep depth`);
+  else if (screenP >= 5) add(screenP,   'This week', '💻', 'Screen-free meals + 30 min offline before bed', `avg ${fmtTime(avgScreen)} — two rules that measurably lower score`);
+  else if (screenP >= 2) add(screenP,   'This week', '💻', 'Use the 20-20-20 rule at your desk',          'Every 20 min: look 20ft away for 20s — reduces cognitive load');
+
+  if      (moodP >= 7)   add(moodP,     'Today',     '😊', 'Reach out to one person — right now',         `avg mood ${avgMood?.toFixed(1)}/10 — social connection is fastest reset`);
+  else if (moodP >= 5)   add(moodP,     'Today',     '😊', 'Close one small task and acknowledge it',     `avg mood ${avgMood?.toFixed(1)}/10 — small wins rebuild momentum`);
+  else if (moodP >= 2)   add(moodP,     'This week', '😊', 'Add 10 min outdoors between tasks',           'Light + movement are the cheapest mood lifts available');
+
+  if      (motivP >= 7)  add(motivP,    'Today',     '🎯', 'Work in 25-min sprints — one task only',      `avg motivation ${avgMotivation?.toFixed(1)}/10 — starting is the hard part`);
+  else if (motivP >= 5)  add(motivP,    'Today',     '🎯', 'Write down one reason you care about your work', 'Reconnecting with purpose is the fastest motivation reset');
+  else if (motivP >= 2)  add(motivP,    'This week', '🎯', 'Prepare your first task the night before',    'Reduces friction — motivation follows action, not the reverse');
+
+  if      (outputP >= 5) add(outputP,   'Today',     '📊', 'Take a real break — no phone scrolling',      `avg output ${avgOutput?.toFixed(1)}/10 — cognitive fatigue needs genuine rest`);
+  else if (outputP >= 3) add(outputP,   'This week', '📊', 'Single-task with all notifications off',      'Close every unrelated tab — focus is a replenishable resource');
+
+  if      (eveningP >= 6) add(eveningP, 'Tonight',   '🌙', 'No work after 8pm — protect 3 evenings this week', `Evening work ${ewRate != null ? Math.round(ewRate * 100) : 0}% of days — wind-down time is not optional`);
+  else if (eveningP >= 4) add(eveningP, 'Tonight',   '🌙', 'Create a shutdown ritual at a fixed time',    'Signals your brain the day is over — directly improves sleep depth');
+  else if (eveningP >= 2) add(eveningP, 'This week', '🌙', 'Add a 20-min calm routine before bed',        'Consistent wind-down pays off in sleep quality within 2–3 days');
+
+  if      (exerciseP >= 5) add(exerciseP,'Today',    '🏃', '20-min walk — right now or after work',       'No exercise logged — movement lowers cortisol faster than anything');
+  else if (exerciseP >= 4) add(exerciseP,'Today',    '🏃', 'Walk 15 min at any point today',              'Minimal threshold — gets the habit re-started');
+  else if (exerciseP >= 2) add(exerciseP,'This week','🏃', 'Aim for 30 min movement 3× this week',        'Exercise is a direct score reducer — each session counts');
+
+  if      (outdoorP >= 4) add(outdoorP, 'Today',     '🌿', 'Step outside for at least 10 min',            'No outdoor time — natural light resets cortisol and circadian rhythm');
+  else if (outdoorP >= 2) add(outdoorP, 'This week', '🌿', 'Eat one meal outside this week',              'Lowest-friction way to add outdoor time to a packed schedule');
+
+  if      (socialP >= 3) add(socialP,   'Today',     '👥', 'Text or call one person — 10 min minimum',   'Isolation amplifies every other risk factor — connection is protective');
+  else if (socialP >= 2) add(socialP,   'This week', '👥', 'Schedule one social touchpoint this week',    'Even brief contact buffers against burnout progression');
+
+  const limit = score >= 72 ? 5 : score >= 50 ? 4 : 3;
+  const top   = A.sort((a, b) => b.w - a.w).slice(0, limit);
+
+  const planTitle = score >= 72 ? '🚨 Emergency Recovery Plan'
+                  : score >= 50 ? '⚠️ Correction Needed'
+                  : '📉 Reduce Your Score';
+  const subtitle  = score >= 72 ? `Score ${score}/100 — take these steps immediately.`
+                                 : `Score ${score}/100 — act on these in order.`;
+
+  return `
+    <div class="card-title" style="color:${risk.color}">${planTitle}</div>
+    <div class="action-subtitle">${subtitle}</div>
+    <div class="action-list">${top.map(a => actionItem(a.tf, a.icon, a.t, a.d)).join('')}</div>
+  `;
+}
 
 function renderTips(scoreData) {
   const sec = document.getElementById('tipsSection');
-  if (!scoreData || scoreData.total < 20) { sec.style.display = 'none'; return; }
+  if (!scoreData) { sec.style.display = 'none'; return; }
 
-  const { sleepP, workP, stressP, screenP, moodP, motivP,
-          outputP, eveningP, exerciseP, outdoorP, socialP } = scoreData;
-
-  const candidates = [];
-
-  if      (sleepP >= 13) candidates.push({ score: sleepP, icon: '😴', text: 'Averaging under 5h of sleep. Sleep is the #1 recovery tool — set a fixed bedtime tonight and protect it.' });
-  else if (sleepP >= 9)  candidates.push({ score: sleepP, icon: '😴', text: 'Under 6h average sleep. Cutting screens 30 min before bed can unlock an extra hour of quality rest.' });
-  else if (sleepP >= 6)  candidates.push({ score: sleepP, icon: '😴', text: 'Sleep is close but not optimal. Aim for 7.5h — a consistent wake time is more impactful than bedtime.' });
-  else if (sleepP >= 2)  candidates.push({ score: sleepP, icon: '😴', text: 'Sleep is nearly on track. Keep the same wake time every day, including weekends.' });
-
-  if      (workP >= 12)  candidates.push({ score: workP, icon: '💼', text: 'Averaging 10h+ work days. Set a hard stop time and honor it — your brain needs a genuine end to the workday.' });
-  else if (workP >= 8)   candidates.push({ score: workP, icon: '💼', text: '9–10h work days are accumulating. Block a buffer after work before any evening activity.' });
-  else if (workP >= 4)   candidates.push({ score: workP, icon: '💼', text: 'Work hours slightly elevated. Aim for one lighter day per week and cap others at 8h.' });
-
-  if      (stressP >= 8) candidates.push({ score: stressP, icon: '😤', text: 'Stress is very high. Schedule 10–20 min of decompression daily — walking, breathing exercises, or journaling.' });
-  else if (stressP >= 5) candidates.push({ score: stressP, icon: '😤', text: 'Moderate-high stress. Write down your top stressor and one small action you can take on it today.' });
-  else if (stressP >= 2) candidates.push({ score: stressP, icon: '😤', text: 'Some stress is present. Ensure at least one restorative activity per day — even 10 minutes counts.' });
-
-  if      (screenP >= 8) candidates.push({ score: screenP, icon: '💻', text: '12h+ of daily screen time depletes focus and sleep quality. Try a 1-hour no-screen break in the afternoon.' });
-  else if (screenP >= 5) candidates.push({ score: screenP, icon: '💻', text: 'High screen exposure. Screen-free meals and going offline 30 min before bed make a measurable difference.' });
-  else if (screenP >= 2) candidates.push({ score: screenP, icon: '💻', text: 'Slightly elevated screen time. Use the 20-20-20 rule: every 20 min, look 20 ft away for 20 seconds.' });
-
-  if      (moodP >= 7)   candidates.push({ score: moodP, icon: '😊', text: 'Mood is consistently low. Talk to someone you trust today — social connection is the fastest mood reset.' });
-  else if (moodP >= 5)   candidates.push({ score: moodP, icon: '😊', text: 'Mood is dipping. Complete one small easy task and acknowledge finishing it — small wins rebuild momentum.' });
-  else if (moodP >= 2)   candidates.push({ score: moodP, icon: '😊', text: 'Mood could use support. Brief outdoor time and physical movement both have an immediate positive effect.' });
-
-  if      (motivP >= 7)  candidates.push({ score: motivP, icon: '🎯', text: 'Motivation is very low. Break work into 25-minute sprints — starting is the hardest part, then it gets easier.' });
-  else if (motivP >= 5)  candidates.push({ score: motivP, icon: '🎯', text: 'Motivation is low. Write down one reason you care about what you\'re working on — reconnecting with purpose helps.' });
-  else if (motivP >= 2)  candidates.push({ score: motivP, icon: '🎯', text: 'Motivation is wavering. Reduce friction: prepare your workspace and first task the night before.' });
-
-  if      (outputP >= 5) candidates.push({ score: outputP, icon: '📊', text: 'Low output signals cognitive fatigue. Rest is productive — schedule real breaks, not phone scrolling.' });
-  else if (outputP >= 3) candidates.push({ score: outputP, icon: '📊', text: 'Output declining. Try single-tasking with deep focus blocks and close all unrelated tabs.' });
-
-  if      (eveningP >= 6) candidates.push({ score: eveningP, icon: '🌙', text: 'Working evenings 80%+ of days. Your brain cannot recover without wind-down time — protect at least 3 evenings per week.' });
-  else if (eveningP >= 4) candidates.push({ score: eveningP, icon: '🌙', text: 'Evening work is frequent. Stop working 2h before bed — it directly improves the depth of your sleep.' });
-  else if (eveningP >= 2) candidates.push({ score: eveningP, icon: '🌙', text: 'Occasional evening work adds up. Create a shutdown ritual to signal your brain that the workday is done.' });
-
-  if      (exerciseP >= 5) candidates.push({ score: exerciseP, icon: '🏃', text: 'No exercise logged. Even a 20-minute walk daily reduces cortisol, clears mental fog, and improves sleep.' });
-  else if (exerciseP >= 4) candidates.push({ score: exerciseP, icon: '🏃', text: 'Very little movement. Short walks or stretching count — start with 15 minutes any time of day.' });
-  else if (exerciseP >= 2) candidates.push({ score: exerciseP, icon: '🏃', text: 'Exercise is low. Aim for 30 min of movement at least 3× per week — consistency beats intensity.' });
-
-  if      (outdoorP >= 4) candidates.push({ score: outdoorP, icon: '🌿', text: 'No outdoor time logged. Natural light resets your circadian rhythm and lowers baseline cortisol.' });
-  else if (outdoorP >= 2) candidates.push({ score: outdoorP, icon: '🌿', text: 'Low outdoor exposure. Try eating lunch outside or a 10-min walk between tasks.' });
-
-  if      (socialP >= 3) candidates.push({ score: socialP, icon: '👥', text: 'No social interaction logged. Isolation amplifies burnout — reach out to one person today, even briefly.' });
-  else if (socialP >= 2) candidates.push({ score: socialP, icon: '👥', text: 'Very little social time. Even a 10-minute call with a friend helps buffer against burnout.' });
-
-  const top = candidates.sort((a, b) => b.score - a.score).slice(0, 3);
-
-  const habits = [
-    { icon: '😴', action: 'Sleep 7–8h', detail: 'Same wake time daily — even weekends' },
-    { icon: '🛑', action: 'Hard work cutoff', detail: 'Pick a fixed end time and put phone on DND' },
-    { icon: '🏃', action: 'Walk 20 min daily', detail: 'Any time — reduces cortisol immediately' },
-    { icon: '⏱️', action: '90-min focus blocks', detail: '5–10 min break after each block, no exceptions' },
-    { icon: '📵', action: 'Screen-free meals', detail: 'One guaranteed daily restoration moment' },
-    { icon: '📅', action: 'One full rest day/week', detail: 'No work — non-negotiable recovery' },
-    { icon: '🌿', action: '10 min outdoors', detail: 'Natural light resets your circadian rhythm' },
-    { icon: '📝', action: 'Plan tomorrow tonight', detail: 'Write your top 3 tasks — removes decision fatigue' },
-  ];
-
+  const score = Math.round(scoreData.total);
+  const risk  = riskInfo(score);
   sec.style.display = 'block';
-  sec.innerHTML = `
-    <div class="card-title">How to Lower Your Score</div>
-
-    <div class="tips-section-label">Your top priorities right now</div>
-    <div class="tips-list">
-      ${top.map((t, i) => `
-        <div class="tip-item">
-          <span class="tip-num">${i + 1}</span>
-          <div class="tip-body">
-            <span class="tip-label">${t.icon} ${tipLabel(t.icon)}</span>
-            <span class="tip-text">${t.text}</span>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-    <div class="tips-footer">Address in this order for fastest score drop.</div>
-
-    <div class="habits-divider"></div>
-    <div class="tips-section-label">Daily habits that actually work</div>
-    <div class="habits-grid">
-      ${habits.map(h => `
-        <div class="habit-item">
-          <span class="habit-icon">${h.icon}</span>
-          <div class="habit-body">
-            <span class="habit-action">${h.action}</span>
-            <span class="habit-detail">${h.detail}</span>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  sec.innerHTML     = buildActionPlanHTML(scoreData, score, risk);
 }
 
 // ── Warning banner ───────────────────────────────────────
