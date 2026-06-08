@@ -1,73 +1,113 @@
-# 🔥 Burn It — Burnout Predictor
+# 🔥 Burn It — Burnout Risk Tracker
 
-> Track your daily habits and get a real-time burnout risk score before it's too late.
+**Log your day in 30 seconds. Know your burnout risk before it's too late.**
 
-**Live app → [cyb0rgcode.github.io/burn-it](https://cyb0rgcode.github.io/burn-it/)**
+→ **[cyb0rgcode.github.io/burn-it](https://cyb0rgcode.github.io/burn-it/)**
 
 ---
 
-## What it does
+## Overview
 
-Burn It scores your daily habits across 12 factors and predicts your burnout risk on a 0–100 scale. Log takes ~30 seconds. Data never leaves your device.
+Burn It is a lightweight, fully offline burnout predictor. It scores 12 daily habits on a weighted 0–100 scale, plots your risk over time, and generates a context-aware action plan — escalating from maintenance tips when you're healthy to an emergency recovery protocol when you're critical.
 
-**Risk factors tracked:**
-| Factor | Weight |
-|---|---|
-| Sleep duration | 16 pts |
-| Work hours | 15 pts |
-| Stress level | 12 pts |
-| Screen time | 10 pts |
-| Mood | 10 pts |
-| Motivation | 10 pts |
-| Output quality | 8 pts |
-| Evening work | 6 pts |
-| Exercise | 5 pts |
-| Outdoor time | 4 pts |
-| Social time | 3 pts |
-| Caffeine intake | 1 pt |
+No account. No server. All data lives in your browser's `localStorage`.
 
-**Risk bands:** Low · Moderate · High · Critical
+---
+
+## Scoring model
+
+| Factor | Max pts | What triggers a penalty |
+|---|:---:|---|
+| Sleep duration | 16 | < 7.5h avg over 7 days |
+| Work hours | 15 | > 6h/day avg |
+| Stress level | 12 | avg > 4/10, rising trend |
+| Screen time | 10 | > 8h/day avg |
+| Mood | 10 | avg < 7/10, falling trend |
+| Motivation | 10 | avg < 7/10, falling trend |
+| Output quality | 8 | avg < 7/10, falling trend |
+| Evening work | 6 | > 20% of days |
+| Exercise | 5 | < 45 min/day avg |
+| Outdoor time | 4 | < 30 min/day avg |
+| Social time | 3 | < 30 min/day avg |
+| Caffeine | 1 | > 8 cups/day avg |
+
+**Risk bands**
+
+| Score | Band | Meaning |
+|---|---|---|
+| 0–24 | 🟢 Low | Healthy baseline — protect it |
+| 25–49 | 🟡 Moderate | Early warning signs — correct now |
+| 50–71 | 🟠 High | Significant depletion — act this week |
+| 72–100 | 🔴 Critical | Danger zone — immediate intervention |
+
+Score is computed as a rolling 7-day weighted average so short bad days don't spike you unfairly.
 
 ---
 
 ## Features
 
-- **Daily log** — time inputs, sliders, toggles; takes 30s
-- **Burnout gauge** — weighted score with risk breakdown tiles
-- **7-day forecast** — projects trajectory based on recent trend
-- **Contextual tips** — top 3 priorities ranked by penalty score
-- **Daily habits** — 8 science-backed recovery habits
-- **Trends charts** — 14-day history for all 8 metrics (Chart.js)
-- **Log history** — full table with per-day delete
-- **WebGL background** — DarkVeil CPPN shader, orange-red theme
-- **PWA-ready** — works as iPhone home screen app, safe areas, no zoom
-- **Fully offline** — no server, no account, localStorage only
+**Log tab**
+- Date picker — log or edit any past day, not just today
+- hr:min time inputs for sleep, work, screen, social, exercise, outdoor
+- Sliders for output, mood, stress, motivation (1–10)
+- Caffeine stepper + evening work toggle
+
+**Risk tab**
+- Animated SVG burnout gauge (0–100)
+- 12-factor penalty breakdown with color-coded bars
+- 7-day trajectory forecast (current → projected score + trend direction)
+- Context-aware action plan:
+  - ✅ Low → maintenance habits (Daily / Weekly badges)
+  - 📉 Moderate → top 3 corrective actions
+  - ⚠️ High → top 4 targeted interventions
+  - 🚨 Critical → emergency recovery protocol, top 5 urgent steps
+  - All actions reference your actual averages ("avg 5h sleep") and carry a timeframe badge (Tonight / Today / This week)
+
+**Trends tab**
+- Burnout score curve — full history, orange gradient fill, risk-colored data points
+- Sleep, Work, Screen & Social — 14-day line chart
+- Output, Mood, Stress & Motivation — 14-day line chart
+
+**History tab**
+- Full log table, most recent 14 entries
+- Per-row delete
+
+**Extra**
+- WebGL DarkVeil CPPN animated background (orange-red palette)
+- Warning banner for critical scores and imminent-danger trajectories
+- PWA-ready: add to iPhone home screen, respects Dynamic Island / notch / home-indicator safe areas
+- Fully offline — no network requests after initial page load
 
 ---
 
 ## Stack
 
-- Vanilla HTML / CSS / JavaScript — zero build step
-- [Chart.js 4.4](https://www.chartjs.org/) — trend charts
-- WebGL 1.0 — animated DarkVeil background (ported from [React Bits](https://www.reactbits.dev/))
-- localStorage — all data persisted locally
+| Layer | Tech |
+|---|---|
+| Language | Vanilla HTML / CSS / JavaScript — zero build step |
+| Charts | [Chart.js 4.4](https://www.chartjs.org/) |
+| Background | WebGL 1.0 CPPN shader (ported from [React Bits DarkVeil](https://www.reactbits.dev/)) |
+| Storage | `localStorage` (`burnit_v1` key) |
+| Hosting | GitHub Pages (auto-deploys on push to `main`) |
 
 ---
 
 ## Run locally
 
 ```bash
+# Option 1 — static server (recommended, avoids CORS quirks)
 npx serve .
 # → http://localhost:3000
-```
 
-Or just open `index.html` directly in a browser.
+# Option 2 — just open directly
+open index.html
+```
 
 ---
 
-## Deploy
+## Data & privacy
 
-Hosted on GitHub Pages — any push to `main` updates the live site automatically.
+All data is stored in `localStorage` under the key `burnit_v1` as a JSON array of daily entries. Nothing is ever sent to a server. Clearing browser data or switching browsers will erase your history — export is not yet implemented.
 
 ---
 
