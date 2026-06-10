@@ -827,6 +827,38 @@ body {
   line-height: 1.4;
 }
 
+/* ── Data export / import ── */
+.data-mgmt-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.data-btn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.data-btn:hover { color: var(--text); border-color: var(--orange); }
+.data-btn-danger:hover { color: var(--red); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.07); }
+
+.import-status {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
 /* ── Forecast ── */
 .forecast-row {
   display: flex;
