@@ -484,6 +484,20 @@ function renderBurnoutChart(entries) {
   if (scores.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
+  // 7-day forecast extension (dashed)
+  const projection = projectScore(entries);
+  const forecast = [];
+  if (projection) {
+    const [fy, fm, fd] = entries[entries.length - 1].date.split('-').map(Number);
+    const lastDate = new Date(fy, fm - 1, fd);
+    for (let i = 1; i <= 7; i++) {
+      const next = new Date(lastDate);
+      next.setDate(next.getDate() + i);
+      labels.push(formatDate(localDateStr(next)));
+      forecast.push(Math.round(Math.max(0, Math.min(100, projection.current + projection.slope * i))));
+    }
+  }
+
   const ctx = document.getElementById('burnoutChart').getContext('2d');
   if (burnChart) burnChart.destroy();
 
@@ -491,25 +505,45 @@ function renderBurnoutChart(entries) {
   grad.addColorStop(0, 'rgba(249,115,22,0.28)');
   grad.addColorStop(1, 'rgba(249,115,22,0)');
 
+  const datasets = [{
+    label: 'Burnout Score',
+    data: [...scores, ...Array(forecast.length).fill(null)],
+    borderColor: '#f97316',
+    backgroundColor: grad,
+    tension: 0.4,
+    pointRadius: 3,
+    fill: true,
+    pointBackgroundColor: scores.map(v => riskInfo(v).color),
+    pointBorderColor:     scores.map(v => riskInfo(v).color),
+  }];
+
+  if (forecast.length > 0) {
+    // starts at last history point so the dashed line connects
+    const fcData = [...Array(scores.length - 1).fill(null), scores[scores.length - 1], ...forecast];
+    datasets.push({
+      label: 'Forecast',
+      data: fcData,
+      borderColor: isLight() ? '#b3a399' : '#6b7280',
+      borderDash: [6, 5],
+      borderWidth: 2,
+      tension: 0.4,
+      fill: false,
+      pointRadius: fcData.map((v, i) => v === null || i === scores.length - 1 ? 0 : (i === fcData.length - 1 ? 4 : 2)),
+      pointBackgroundColor: fcData.map(v => v === null ? 'transparent' : riskInfo(v).color),
+      pointBorderColor:     fcData.map(v => v === null ? 'transparent' : riskInfo(v).color),
+    });
+  }
+
   burnChart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Burnout Score',
-        data: scores,
-        borderColor: '#f97316',
-        backgroundColor: grad,
-        tension: 0.4,
-        pointRadius: 3,
-        fill: true,
-        pointBackgroundColor: scores.map(v => riskInfo(v).color),
-        pointBorderColor:     scores.map(v => riskInfo(v).color),
-      }],
-    },
+    data: { labels, datasets },
     options: (() => {
       const o = chartOpts(100);
-      o.plugins.tooltip.callbacks = { label: ctx => `Score: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK` };
+      o.plugins.tooltip.callbacks = {
+        label: ctx => ctx.datasetIndex === 1
+          ? `Forecast: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK`
+          : `Score: ${ctx.parsed.y} — ${riskInfo(ctx.parsed.y).label} RISK`
+      };
       o.scales.y.ticks = { ...o.scales.y.ticks, stepSize: 25 };
       return o;
     })(),
