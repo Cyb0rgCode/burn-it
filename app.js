@@ -1023,26 +1023,47 @@ function flashStatus(msg, ok) {
   setTimeout(() => { status.textContent = ''; }, 3500);
 }
 
+function updateTgBtn() {
+  document.getElementById('tgBtn').textContent = getTgConfig()
+    ? '✈️ Telegram backup ✓'
+    : '✈️ Telegram backup';
+}
+
 document.getElementById('tgBtn').addEventListener('click', () => {
+  const panel = document.getElementById('tgConfig');
+  const open  = panel.style.display !== 'none';
+  if (open) { panel.style.display = 'none'; return; }
   const cur = getTgConfig() || {};
-  const token = prompt(
-    'Telegram bot token (from @BotFather).\nLeave empty to disable Telegram backup:',
-    cur.token || ''
-  );
-  if (token === null) return;
-  if (!token.trim()) {
-    localStorage.removeItem(TG_KEY);
-    flashStatus('Telegram backup disabled', true);
+  document.getElementById('tgToken').value  = cur.token  || '';
+  document.getElementById('tgChatId').value = cur.chatId || '';
+  panel.style.display = 'block';
+});
+
+document.getElementById('tgSave').addEventListener('click', () => {
+  const token  = document.getElementById('tgToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+  if (!token || !chatId) {
+    flashStatus('✗ Both token and chat ID are required', false);
     return;
   }
-  const chatId = prompt(
-    'Your chat ID.\nSend any message to your bot, then open:\napi.telegram.org/bot<TOKEN>/getUpdates\n(or message @userinfobot)',
-    cur.chatId || ''
-  );
-  if (chatId === null || !chatId.trim()) return;
-  localStorage.setItem(TG_KEY, JSON.stringify({ token: token.trim(), chatId: chatId.trim() }));
+  localStorage.setItem(TG_KEY, JSON.stringify({ token, chatId }));
+  document.getElementById('tgConfig').style.display = 'none';
+  updateTgBtn();
   flashStatus('✓ Telegram backup enabled — exports now auto-send', true);
 });
+
+document.getElementById('tgDisable').addEventListener('click', () => {
+  localStorage.removeItem(TG_KEY);
+  document.getElementById('tgConfig').style.display = 'none';
+  updateTgBtn();
+  flashStatus('Telegram backup disabled', true);
+});
+
+document.getElementById('tgCancel').addEventListener('click', () => {
+  document.getElementById('tgConfig').style.display = 'none';
+});
+
+updateTgBtn();
 
 async function sendTgBackup(json, count) {
   const cfg = getTgConfig();

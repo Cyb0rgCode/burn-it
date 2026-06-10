@@ -892,6 +892,34 @@ body {
   font-weight: 500;
 }
 
+/* ── Telegram config panel ── */
+.tg-config {
+  display: grid;
+  gap: 0.625rem;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.tg-config-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tg-config-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tg-config-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
 /* ── Forecast ── */
 .forecast-row {
   display: flex;
