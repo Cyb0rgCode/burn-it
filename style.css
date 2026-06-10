@@ -1297,6 +1297,11 @@ body {
   .form-label { font-size: 0.8125rem; margin-bottom: 0.3125rem; }
   .form-label .unit { font-size: 0.6875rem; }
   .form-grid .form-group { margin-bottom: 0.5rem; }
+  /* Center the entry fields on phones */
+  .form-grid .form-label { justify-content: center; gap: 0.375rem; }
+  .form-grid .time-row,
+  .form-grid .toggle-row,
+  .form-grid .stepper-row { justify-content: center; }
   .form-group-inline { gap: 0.625rem; margin-bottom: 0.4375rem; }
   .form-group-inline .form-label { min-width: 96px; }
   .time-row { gap: 0.4375rem; }
