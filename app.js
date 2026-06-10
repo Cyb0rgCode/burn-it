@@ -783,13 +783,13 @@ function renderWarning(scoreData, projection) {
     return;
   }
 
-  if (projection?.daysUntilDanger !== null && projection.daysUntilDanger <= 7) {
+  if (projection && projection.daysUntilDanger !== null && projection.daysUntilDanger <= 7) {
     banner.style.display = 'flex';
     banner.innerHTML = `<span class="warning-icon">⚠️</span><span>At this pace, burnout hits in <strong>${projection.daysUntilDanger} day${projection.daysUntilDanger === 1 ? '' : 's'}</strong>. Adjust sleep, screen time, or workload now.</span>`;
     return;
   }
 
-  if (projection?.daysUntilDanger !== null) {
+  if (projection && projection.daysUntilDanger !== null) {
     banner.className = 'warning-banner amber';
     banner.style.display = 'flex';
     banner.innerHTML = `<span class="warning-icon">📉</span><span>Trending toward burnout in <strong>${projection.daysUntilDanger} days</strong> if this pattern continues.</span>`;
