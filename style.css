@@ -489,35 +489,62 @@ body {
   flex: 1;
   min-width: 0;
   -webkit-appearance: none;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 100px;
   outline: none;
   cursor: pointer;
+  /* --fill set by JS to the thumb position percent */
+  background: linear-gradient(to right, #f97316 0%, #ef4444 var(--fill, 50%), var(--border) var(--fill, 50%));
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--orange);
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  border: 3px solid var(--card);
+  box-shadow: 0 1px 5px rgba(0,0,0,0.3), 0 0 0 1px rgba(249,115,22,0.3);
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
-  box-shadow: 0 0 0 0 rgba(249,115,22,0);
+  transition: transform 0.1s, box-shadow 0.15s;
 }
 
 .slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(249,115,22,0.2);
+  transform: scale(1.12);
+  box-shadow: 0 1px 5px rgba(0,0,0,0.3), 0 0 0 5px rgba(249,115,22,0.18);
+}
+
+.slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  border: 3px solid var(--card);
+  cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 100px;
+  background: var(--border);
+}
+
+.slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 100px;
+  background: linear-gradient(to right, #f97316, #ef4444);
 }
 
 .slider-value {
-  min-width: 22px;
-  text-align: right;
+  min-width: 2.125rem;
+  text-align: center;
   font-weight: 700;
-  color: var(--text);
-  font-size: 1rem;
+  color: var(--orange);
+  background: rgba(249, 115, 22, 0.12);
+  border-radius: 8px;
+  padding: 0.2rem 0.25rem;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .log-btn {

@@ -422,6 +422,7 @@ function populateFormFromEntry(entry) {
   document.getElementById('eveningWorkInput').checked      = ew;
   document.getElementById('eveningWorkLabel').textContent  = ew ? 'Yes' : 'No';
   document.getElementById('eveningWorkLabel').style.color  = ew ? 'var(--orange)' : '';
+  refreshSliderFills();
 }
 
 function clearFormFields() {
@@ -442,6 +443,7 @@ function clearFormFields() {
   document.getElementById('eveningWorkInput').checked      = false;
   document.getElementById('eveningWorkLabel').textContent  = 'No';
   document.getElementById('eveningWorkLabel').style.color  = '';
+  refreshSliderFills();
 }
 
 function syncFormState(entries) {
@@ -925,11 +927,23 @@ document.querySelectorAll('.page-tab').forEach(tab => {
 });
 
 // Slider sync
+function updateSliderFill(slider) {
+  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.setProperty('--fill', `${pct}%`);
+}
+
+function refreshSliderFills() {
+  ['output', 'mood', 'stress', 'motivation'].forEach(name =>
+    updateSliderFill(document.getElementById(`${name}Input`))
+  );
+}
+
 ['output', 'mood', 'stress', 'motivation'].forEach(name => {
   const input   = document.getElementById(`${name}Input`);
   const display = document.getElementById(`${name}Display`);
-  input.addEventListener('input', () => { display.textContent = input.value; });
+  input.addEventListener('input', () => { display.textContent = input.value; updateSliderFill(input); });
 });
+refreshSliderFills();
 
 // Evening work toggle label
 document.getElementById('eveningWorkInput').addEventListener('change', function () {
