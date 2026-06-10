@@ -957,6 +957,60 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   render();
 });
 
+// ── Export / Import ──────────────────────────────────────
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const entries = getEntries();
+  if (entries.length === 0) return;
+  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `burnit-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const status = document.getElementById('importStatus');
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('File must contain a JSON array');
+      const valid = data.filter(entry =>
+        entry && typeof entry.date === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
+        typeof entry.sleep === 'number'
+      );
+      if (valid.length === 0) throw new Error('No valid entries found');
+      const existing = getEntries();
+      const merged   = [...existing];
+      valid.forEach(entry => {
+        const idx = merged.findIndex(e => e.date === entry.date);
+        if (idx >= 0) merged[idx] = entry; else merged.push(entry);
+      });
+      merged.sort((a, b) => a.date.localeCompare(b.date));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      render();
+      status.textContent = `✓ Imported ${valid.length} entr${valid.length === 1 ? 'y' : 'ies'}`;
+      status.style.color = '#22c55e';
+    } catch (err) {
+      status.textContent = `✗ ${err.message}`;
+      status.style.color = '#ef4444';
+    }
+    setTimeout(() => { status.textContent = ''; }, 3500);
+    this.value = '';
+  };
+  reader.readAsText(file);
+});
+
 // ── Init ─────────────────────────────────────────────────
 
 document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', {

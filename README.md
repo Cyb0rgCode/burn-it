@@ -71,6 +71,8 @@ Score is computed as a rolling 7-day weighted average so short bad days don't sp
 **History tab**
 - Full log table, most recent 14 entries
 - Per-row delete
+- Export all data as a JSON file
+- Import JSON (merges by date, newer entry wins)
 
 **Extra**
 - WebGL DarkVeil CPPN animated background (orange-red palette)
@@ -107,7 +109,7 @@ open index.html
 
 ## Data & privacy
 
-All data is stored in `localStorage` under the key `burnit_v1` as a JSON array of daily entries. Nothing is ever sent to a server. Clearing browser data or switching browsers will erase your history — export is not yet implemented.
+All data is stored in `localStorage` under the key `burnit_v1` as a JSON array of daily entries. Nothing is ever sent to a server. Use Export on the History tab to back up your data as a `.json` file; use Import to restore it.
 
 ---
 
