@@ -962,14 +962,73 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 document.getElementById('exportBtn').addEventListener('click', () => {
   const entries = getEntries();
   if (entries.length === 0) return;
-  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  const json = JSON.stringify(entries, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
   a.download = `burnit-${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  sendTgBackup(json, entries.length);
 });
+
+// ── Telegram backup ──────────────────────────────────────
+
+const TG_KEY = 'burnit_tg';
+
+function getTgConfig() {
+  try { return JSON.parse(localStorage.getItem(TG_KEY)) || null; }
+  catch { return null; }
+}
+
+function flashStatus(msg, ok) {
+  const status = document.getElementById('importStatus');
+  status.textContent = msg;
+  status.style.color = ok ? '#22c55e' : '#ef4444';
+  setTimeout(() => { status.textContent = ''; }, 3500);
+}
+
+document.getElementById('tgBtn').addEventListener('click', () => {
+  const cur = getTgConfig() || {};
+  const token = prompt(
+    'Telegram bot token (from @BotFather).\nLeave empty to disable Telegram backup:',
+    cur.token || ''
+  );
+  if (token === null) return;
+  if (!token.trim()) {
+    localStorage.removeItem(TG_KEY);
+    flashStatus('Telegram backup disabled', true);
+    return;
+  }
+  const chatId = prompt(
+    'Your chat ID.\nSend any message to your bot, then open:\napi.telegram.org/bot<TOKEN>/getUpdates\n(or message @userinfobot)',
+    cur.chatId || ''
+  );
+  if (chatId === null || !chatId.trim()) return;
+  localStorage.setItem(TG_KEY, JSON.stringify({ token: token.trim(), chatId: chatId.trim() }));
+  flashStatus('✓ Telegram backup enabled — exports now auto-send', true);
+});
+
+async function sendTgBackup(json, count) {
+  const cfg = getTgConfig();
+  if (!cfg) return;
+  try {
+    const fd = new FormData();
+    fd.append('chat_id', cfg.chatId);
+    fd.append('caption', `Burn It backup — ${today()} (${count} entr${count === 1 ? 'y' : 'ies'})`);
+    fd.append('document', new Blob([json], { type: 'application/json' }), `burnit-${today()}.json`);
+    const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, {
+      method: 'POST',
+      body: fd
+    });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.description || 'Telegram API error');
+    flashStatus('✓ Backup sent to Telegram', true);
+  } catch (err) {
+    flashStatus(`✗ Telegram: ${err.message}`, false);
+  }
+}
 
 document.getElementById('importBtn').addEventListener('click', () => {
   document.getElementById('importFile').click();

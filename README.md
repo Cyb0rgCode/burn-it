@@ -73,6 +73,7 @@ Score is computed as a rolling 7-day weighted average so short bad days don't sp
 - Per-row delete
 - Export all data as a JSON file
 - Import JSON (merges by date, newer entry wins)
+- Optional Telegram backup — set a bot token + chat ID once, every export also sends the JSON to your Telegram chat (credentials stay in `localStorage`, never leave your device except to the Telegram API)
 
 **Extra**
 - WebGL DarkVeil CPPN animated background (orange-red palette)
