@@ -1143,6 +1143,22 @@ body {
   .warning-banner { padding: 0.625rem 1rem; font-size: 0.875rem; }
   /* Prevent iOS Safari from zooming in on input focus (requires ≥16px) */
   .form-input, select, textarea { font-size: 1rem !important; }
+
+  /* Touch targets (Apple HIG ~44pt) */
+  .stepper-btn { width: 42px; height: 42px; }
+  .theme-toggle { width: 40px; height: 40px; }
+  .slider { height: 6px; }
+  .slider::-webkit-slider-thumb { width: 24px; height: 24px; }
+  .delete-btn { font-size: 1.375rem; padding: 0.25rem 0.5rem; }
+  .data-btn { padding: 0.625rem 0.5rem; }
+  .toggle { width: 50px; height: 30px; }
+  .toggle-slider::before { width: 24px; height: 24px; }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+  .mobile-nav .page-tab { padding: 0.5rem 0.25rem 0.4375rem; }
+
+  /* Touch feedback — hover styles don't fire on iOS */
+  .data-btn:active, .stepper-btn:active, .theme-toggle:active { transform: scale(0.95); }
+  .mobile-nav .page-tab:active { color: var(--text); }
 }
 
 /* ── Responsive: phones (≤480px) ── */
@@ -1154,6 +1170,8 @@ body {
     padding-left: max(0.75rem, var(--safe-left));
   }
   .header-date { display: none; }
+  /* header-date (margin-left:auto) is hidden here — keep toggle pinned right */
+  .theme-toggle { margin-left: auto; }
   .main {
     padding: 0 0.75rem 1.25rem;
     padding-right: max(0.75rem, var(--safe-right));
@@ -1161,11 +1179,11 @@ body {
   }
   .page-tab { padding: 0.625rem 0.75rem; font-size: 0.8rem; }
   .page-tab-bar { margin-bottom: 1.25rem; }
-  .card { padding: 1rem; }
-  .card-title { margin-bottom: 0.875rem; }
+  .card { padding: 1rem; border-radius: 14px; }
+  .card-title { font-size: 0.9375rem; margin-bottom: 0.875rem; }
   .form-container { max-width: 100%; }
   .form-group-inline .form-label { min-width: 100px; }
-  .chart-wrapper { height: 150px; }
+  .chart-wrapper { height: 170px; }
   .warning-banner { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
   .forecast-row { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
   .forecast-arrow { display: none; }
@@ -1175,7 +1193,12 @@ body {
   #breakdownSection { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chart-wrapper canvas { max-width: 100%; }
   .table-scroll { font-size: 0.8125rem; }
-  .history-table th, .history-table td { padding: 0.4rem 0.5rem; }
+  .history-table th, .history-table td { padding: 0.4rem 0.5rem; white-space: nowrap; }
+
+  /* Data buttons: 2-col grid beats a cramped 5-button flex row */
+  .data-mgmt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  #tgBtn { grid-column: 1 / -1; }
+  .import-status { grid-column: 1 / -1; text-align: center; min-height: 1.2em; }
 }
 
 /* ── Responsive: small phones (≤360px) ── */
