@@ -993,10 +993,13 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 
 // ── Export / Import ──────────────────────────────────────
 
-document.getElementById('exportBtn').addEventListener('click', () => {
+document.getElementById('exportBtn').addEventListener('click', async () => {
   const entries = getEntries();
   if (entries.length === 0) return;
   const json = JSON.stringify(entries, null, 2);
+  // Telegram first: triggering the download can tear down the page context
+  // in iOS standalone PWAs, aborting any in-flight fetch ("Load failed").
+  await sendTgBackup(json, entries.length);
   const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -1004,7 +1007,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   a.download = `burnit-${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  sendTgBackup(json, entries.length);
 });
 
 // ── Telegram backup ──────────────────────────────────────
@@ -1081,7 +1083,10 @@ async function sendTgBackup(json, count) {
     if (!out.ok) throw new Error(out.description || 'Telegram API error');
     flashStatus('✓ Backup sent to Telegram', true);
   } catch (err) {
-    flashStatus(`✗ Telegram: ${err.message}`, false);
+    const msg = /load failed|failed to fetch/i.test(err.message)
+      ? 'network error — check connection, or your network may block api.telegram.org'
+      : err.message;
+    flashStatus(`✗ Telegram: ${msg}`, false);
   }
 }
 
