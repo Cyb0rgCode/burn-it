@@ -1,6 +1,6 @@
 # 🔥 Burn It — Burnout Risk Tracker
 
-**Log your day in 30 seconds. Know your burnout risk before it's too late.**
+**Reads your patterns — sleep, output, screen time — and warns you the week before you crash. Not after.**
 
 → **[cyb0rgcode.github.io/burn-it](https://cyb0rgcode.github.io/burn-it/)**
 
