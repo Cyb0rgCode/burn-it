@@ -1059,21 +1059,36 @@ document.getElementById('tgBtn').addEventListener('click', () => {
   panel.style.display = 'block';
 });
 
-document.getElementById('tgSave').addEventListener('click', () => {
+document.getElementById('tgSave').addEventListener('click', async () => {
   const token  = document.getElementById('tgToken').value.trim();
   const chatId = document.getElementById('tgChatId').value.trim();
   if (!token || !chatId) {
     flashStatus('✗ Both token and chat ID are required', false);
     return;
   }
+  const account     = document.getElementById('tgAccount').value.trim() || 'default';
+  const prevAccount = (localStorage.getItem(ACCOUNT_KEY) || 'default').trim() || 'default';
+  const hadConfig   = !!getTgConfig();
   localStorage.setItem(TG_KEY, JSON.stringify({ token, chatId }));
-  const account = document.getElementById('tgAccount').value.trim() || 'default';
-  localStorage.setItem(ACCOUNT_KEY, account);
   document.getElementById('tgConfig').style.display = 'none';
   updateTgBtn();
+
+  if (hadConfig && account !== prevAccount) {
+    // Account switch: flush local entries under the OLD name first so
+    // nothing leaks into the new account, then start it clean.
+    flashStatus(`Switching to "${account}"…`, true);
+    await syncNow();
+    localStorage.setItem(ACCOUNT_KEY, account);
+    localStorage.removeItem(STORAGE_KEY);
+    clearFormFields();
+    await syncNow();
+    flashStatus(`✓ Switched to account "${account}"`, true);
+  } else {
+    localStorage.setItem(ACCOUNT_KEY, account);
+    flashStatus('✓ Telegram connected — backup + cloud sync active', true);
+    syncNow();
+  }
   setSyncIdleLabel();
-  flashStatus('✓ Telegram connected — backup + cloud sync active', true);
-  syncNow();
 });
 
 document.getElementById('tgDisable').addEventListener('click', () => {
