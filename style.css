@@ -69,6 +69,7 @@ html[data-theme="light"] .delete-btn     { color: #b8b0a8; }
 
 html[data-theme="light"] .toggle-slider::before     { background: #a8998f; }
 html[data-theme="light"] .stepper-btn:hover         { background: #ddd8d0; }
+html[data-theme="light"] .form-input:focus          { background: #fffdfb; }
 
 html[data-theme="light"] .breakdown-item            { background: rgba(60,40,20,0.025); }
 html[data-theme="light"] .action-item               { background: rgba(60,40,20,0.03);  }
