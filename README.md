@@ -74,6 +74,7 @@ Score is computed as a rolling 7-day weighted average so short bad days don't sp
 - Export all data as a JSON file
 - Import JSON (merges by date, newer entry wins)
 - Optional Telegram backup — set a bot token + chat ID once, every export also sends the JSON to your Telegram chat (credentials stay in `localStorage`, never leave your device except to the Telegram API)
+- Telegram cloud sync — the full store lives as a gzip-compressed pinned message in your bot chat; the app auto-pulls on load and auto-pushes (debounced) after every save, delete, or import. Multiple accounts supported: devices sharing an account name share one history, different names stay separate. Conflicts resolve per-entry by newest write. (Telegram's file endpoint lacks CORS, so the store travels as message text, not a document.)
 
 **Extra**
 - WebGL DarkVeil CPPN animated background (orange-red palette)

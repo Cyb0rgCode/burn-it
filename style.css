@@ -1331,10 +1331,9 @@ body {
   .table-scroll { font-size: 0.8125rem; }
   .history-table th, .history-table td { padding: 0.4rem 0.5rem; white-space: nowrap; }
 
-  /* Data buttons: 2-col grid beats a cramped 5-button flex row */
+  /* Data buttons: 2-col grid beats a cramped flex row */
   .data-mgmt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-  #tgBtn { grid-column: 1 / -1; }
-  .import-status { grid-column: 1 / -1; text-align: center; min-height: 1.2em; }
+  .import-status { grid-column: 1 / -1; text-align: center; min-height: 0; }
 }
 
 /* ── Responsive: small phones (≤360px) ── */

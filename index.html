@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=29">
   <script>
     (function(){var t=localStorage.getItem('burnit_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
   </script>
@@ -227,14 +227,17 @@
       <button class="data-btn" id="exportBtn">📤 Export data</button>
       <button class="data-btn" id="importBtn">📥 Import data</button>
       <button class="data-btn" id="tgBtn">✈️ Telegram backup</button>
+      <button class="data-btn" id="syncBtn">🔄 Sync now</button>
       <input type="file" id="importFile" accept=".json" style="display:none">
+      <span class="import-status" id="syncStatus"></span>
       <span class="import-status" id="importStatus"></span>
     </div>
     <div class="tg-config" id="tgConfig" style="display:none">
       <div class="tg-config-title">Telegram backup setup</div>
-      <div class="tg-config-hint">1. Message <strong>@BotFather</strong> → /newbot → copy the token.<br>2. Message your new bot once, then get your chat ID from <strong>@userinfobot</strong>.</div>
+      <div class="tg-config-hint">1. Message <strong>@BotFather</strong> → /newbot → copy the token.<br>2. Message your new bot once, then get your chat ID from <strong>@userinfobot</strong>.<br>3. Pick an account name — devices with the same name share one synced history; different names keep separate histories in the same chat.</div>
       <input type="text" id="tgToken" class="form-input" placeholder="Bot token" autocomplete="off" autocapitalize="none" spellcheck="false">
       <input type="text" id="tgChatId" class="form-input" placeholder="Chat ID" autocomplete="off" inputmode="numeric">
+      <input type="text" id="tgAccount" class="form-input" placeholder="Account name (default)" autocomplete="off" autocapitalize="none" spellcheck="false">
       <div class="tg-config-row">
         <button class="data-btn" id="tgSave">Save</button>
         <button class="data-btn data-btn-danger" id="tgDisable">Disable</button>
@@ -303,8 +306,8 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=28"></script>
-<script src="app.js?v=28"></script>
+<script src="dotfield.js?v=29"></script>
+<script src="app.js?v=29"></script>
 
 </body>
 </html>

@@ -9,17 +9,20 @@ function getEntries() {
 }
 
 function saveEntry(entry) {
+  entry._ts = Date.now();   // last-write-wins marker for cloud sync merges
   const entries = getEntries();
   const idx = entries.findIndex(e => e.date === entry.date);
   if (idx >= 0) entries[idx] = entry;
   else entries.push(entry);
   entries.sort((a, b) => a.date.localeCompare(b.date));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  scheduleSync();
 }
 
 function deleteEntry(date) {
   const entries = getEntries().filter(e => e.date !== date);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  scheduleSync();
 }
 
 function clearAll() {
@@ -1050,8 +1053,9 @@ document.getElementById('tgBtn').addEventListener('click', () => {
   const open  = panel.style.display !== 'none';
   if (open) { panel.style.display = 'none'; return; }
   const cur = getTgConfig() || {};
-  document.getElementById('tgToken').value  = cur.token  || '';
-  document.getElementById('tgChatId').value = cur.chatId || '';
+  document.getElementById('tgToken').value   = cur.token  || '';
+  document.getElementById('tgChatId').value  = cur.chatId || '';
+  document.getElementById('tgAccount').value = localStorage.getItem(ACCOUNT_KEY) || '';
   panel.style.display = 'block';
 });
 
@@ -1063,9 +1067,13 @@ document.getElementById('tgSave').addEventListener('click', () => {
     return;
   }
   localStorage.setItem(TG_KEY, JSON.stringify({ token, chatId }));
+  const account = document.getElementById('tgAccount').value.trim() || 'default';
+  localStorage.setItem(ACCOUNT_KEY, account);
   document.getElementById('tgConfig').style.display = 'none';
   updateTgBtn();
-  flashStatus('✓ Telegram backup enabled — exports now auto-send', true);
+  setSyncIdleLabel();
+  flashStatus('✓ Telegram connected — backup + cloud sync active', true);
+  syncNow();
 });
 
 document.getElementById('tgDisable').addEventListener('click', () => {
@@ -1104,6 +1112,135 @@ async function sendTgBackup(json, count) {
   }
 }
 
+// ── Telegram cloud sync ──────────────────────────────────
+// The latest state lives as a pinned `burnit-sync.json` document in the
+// bot chat: push = sendDocument + pin, pull = getChat → pinned file.
+// One file holds every account: { accounts: { name: [entries] } }.
+
+const ACCOUNT_KEY = 'burnit_account';
+
+function getAccount() {
+  return (localStorage.getItem(ACCOUNT_KEY) || 'default').trim() || 'default';
+}
+
+async function tgApi(method, params) {
+  const cfg = getTgConfig();
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/${method}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.description || `${method} failed`);
+  return out.result;
+}
+
+// Telegram's file-download endpoint sends no CORS headers, so documents
+// are upload-only from a browser. The sync store therefore travels as
+// gzip+base64 TEXT inside the pinned message (4096-char Telegram limit;
+// compression keeps years of entries under it).
+
+const SYNC_PREFIX = 'BURNIT_SYNC_V1:';
+
+async function gzipB64(str) {
+  const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+  const bytes  = new Uint8Array(await new Response(stream).arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+
+async function gunzipB64(b64) {
+  const bytes  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
+}
+
+async function fetchCloudStore() {
+  const cfg  = getTgConfig();
+  const chat = await tgApi('getChat', { chat_id: cfg.chatId });
+  const pm   = chat.pinned_message;
+  const txt  = (pm && pm.text) || '';
+  if (!txt.startsWith(SYNC_PREFIX)) return { store: null, pinnedId: null };
+  const store = JSON.parse(await gunzipB64(txt.slice(SYNC_PREFIX.length)));
+  return { store, pinnedId: pm.message_id };
+}
+
+function mergeEntries(a, b) {
+  // union by date; on conflict the entry with the newer _ts wins
+  const merged = [...a];
+  b.forEach(entry => {
+    const idx = merged.findIndex(e => e.date === entry.date);
+    if (idx < 0) merged.push(entry);
+    else if ((entry._ts || 0) > (merged[idx]._ts || 0)) merged[idx] = entry;
+  });
+  merged.sort((x, y) => x.date.localeCompare(y.date));
+  return merged;
+}
+
+let syncTimer = null;
+let syncBusy  = false;
+
+function scheduleSync() {
+  if (typeof getTgConfig !== 'function' || !getTgConfig()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 2000);
+}
+
+function setSyncIdleLabel() {
+  const el = document.getElementById('syncStatus');
+  if (el) el.textContent = getTgConfig() ? `☁️ ${getAccount()}` : '';
+}
+
+async function syncNow() {
+  const cfg = getTgConfig();
+  if (!cfg || syncBusy) return;
+  syncBusy = true;
+  const el = document.getElementById('syncStatus');
+  try {
+    if (el) el.textContent = '🔄 syncing…';
+
+    // Pull. If the cloud is unreachable, abort — never overwrite the
+    // pinned store with a local-only view of the world.
+    const { store: cloudStore, pinnedId } = await fetchCloudStore();
+    const store = cloudStore && typeof cloudStore === 'object' ? cloudStore : {};
+    store.accounts = store.accounts || {};
+
+    const account = getAccount();
+    const cloud   = Array.isArray(store.accounts[account]) ? store.accounts[account] : [];
+    const merged  = mergeEntries(getEntries(), cloud);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    render();
+
+    // Push the merged result back so every device converges.
+    store.accounts[account] = merged;
+    store.updated = new Date().toISOString();
+    const payload = SYNC_PREFIX + await gzipB64(JSON.stringify(store));
+    if (payload.length > 4096) throw new Error('sync store too large — export old data and clear it');
+    const sent = await tgApi('sendMessage', { chat_id: cfg.chatId, text: payload, disable_notification: true });
+    await tgApi('pinChatMessage', { chat_id: cfg.chatId, message_id: sent.message_id, disable_notification: true });
+
+    // Best effort: clean up the previous sync file (Telegram only allows
+    // deleting messages younger than 48h).
+    if (pinnedId) { try { await tgApi('deleteMessage', { chat_id: cfg.chatId, message_id: pinnedId }); } catch {} }
+
+    if (el) { el.textContent = `✓ synced · ${account}`; el.style.color = '#22c55e'; }
+  } catch (err) {
+    if (el) { el.textContent = `✗ sync: ${err.message}`; el.style.color = '#ef4444'; }
+  } finally {
+    syncBusy = false;
+    setTimeout(() => { if (!syncBusy) { const s = document.getElementById('syncStatus'); if (s) { s.style.color = ''; } setSyncIdleLabel(); } }, 4000);
+  }
+}
+
+document.getElementById('syncBtn').addEventListener('click', () => syncNow());
+
+// Auto-pull on startup when sync is configured
+if (getTgConfig()) syncNow();
+setSyncIdleLabel();
+
 document.getElementById('importBtn').addEventListener('click', () => {
   document.getElementById('importFile').click();
 });
@@ -1132,6 +1269,7 @@ document.getElementById('importFile').addEventListener('change', function () {
       merged.sort((a, b) => a.date.localeCompare(b.date));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       render();
+      scheduleSync();
       status.textContent = `✓ Imported ${valid.length} entr${valid.length === 1 ? 'y' : 'ies'}`;
       status.style.color = '#22c55e';
     } catch (err) {
