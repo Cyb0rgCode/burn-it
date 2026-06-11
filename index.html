@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=27">
+  <link rel="stylesheet" href="style.css?v=28">
   <script>
     (function(){var t=localStorage.getItem('burnit_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
   </script>
@@ -54,9 +54,9 @@
             <div class="form-group">
               <label class="form-label">😴 Sleep</label>
               <div class="time-row">
-                <input type="number" id="sleepHr"  class="form-input time-input" min="0" max="23" placeholder="--">
+                <input type="number" id="sleepHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="23" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="sleepMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="sleepMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -64,9 +64,9 @@
             <div class="form-group">
               <label class="form-label">💼 Work</label>
               <div class="time-row">
-                <input type="number" id="workHr"  class="form-input time-input" min="0" max="24" placeholder="--">
+                <input type="number" id="workHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="24" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="workMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="workMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -74,9 +74,9 @@
             <div class="form-group">
               <label class="form-label">💻 Screen</label>
               <div class="time-row">
-                <input type="number" id="screenHr"  class="form-input time-input" min="0" max="24" placeholder="--">
+                <input type="number" id="screenHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="24" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="screenMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="screenMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -95,9 +95,9 @@
             <div class="form-group">
               <label class="form-label">👥 Social</label>
               <div class="time-row">
-                <input type="number" id="socialHr"  class="form-input time-input" min="0" max="24" placeholder="--">
+                <input type="number" id="socialHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="24" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="socialMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="socialMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -105,9 +105,9 @@
             <div class="form-group">
               <label class="form-label">🏃 Exercise</label>
               <div class="time-row">
-                <input type="number" id="exerciseHr"  class="form-input time-input" min="0" max="12" placeholder="--">
+                <input type="number" id="exerciseHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="12" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="exerciseMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="exerciseMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -115,9 +115,9 @@
             <div class="form-group">
               <label class="form-label">🌿 Outdoor</label>
               <div class="time-row">
-                <input type="number" id="outdoorHr"  class="form-input time-input" min="0" max="24" placeholder="--">
+                <input type="number" id="outdoorHr"  class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="24" placeholder="--">
                 <span class="time-sep">hr</span>
-                <input type="number" id="outdoorMin" class="form-input time-input" min="0" max="59" placeholder="--">
+                <input type="number" id="outdoorMin" class="form-input time-input" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="--">
                 <span class="time-sep">min</span>
               </div>
             </div>
@@ -303,8 +303,8 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=27"></script>
-<script src="app.js?v=27"></script>
+<script src="dotfield.js?v=28"></script>
+<script src="app.js?v=28"></script>
 
 </body>
 </html>
