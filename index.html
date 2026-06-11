@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=31">
   <script>
     (function(){var t=localStorage.getItem('burnit_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
   </script>
@@ -221,17 +221,21 @@
 
   <!-- ── History tab ── -->
   <div class="page-pane" id="page-history">
-    <div class="data-mgmt-row">
-      <button class="data-btn" id="demoBtn">Load sample data</button>
-      <button class="data-btn data-btn-danger" id="clearBtn">Clear all</button>
-      <button class="data-btn" id="exportBtn">📤 Export data</button>
-      <button class="data-btn" id="importBtn">📥 Import data</button>
-      <button class="data-btn" id="tgBtn">✈️ Telegram backup</button>
-      <button class="data-btn" id="syncBtn">🔄 Sync now</button>
-      <input type="file" id="importFile" accept=".json" style="display:none">
-      <span class="import-status" id="syncStatus"></span>
-      <span class="import-status" id="importStatus"></span>
-    </div>
+    <div class="card data-card">
+      <div class="card-title">Data &amp; Sync</div>
+      <div class="data-mgmt-row">
+        <button class="data-btn" id="demoBtn">🧪 Load sample data</button>
+        <button class="data-btn data-btn-danger" id="clearBtn">🗑️ Clear all</button>
+        <button class="data-btn" id="exportBtn">📤 Export data</button>
+        <button class="data-btn" id="importBtn">📥 Import data</button>
+        <button class="data-btn" id="tgBtn">✈️ Telegram backup</button>
+        <button class="data-btn" id="syncBtn">🔄 Sync now</button>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
+      <div class="data-status-row">
+        <span class="import-status" id="syncStatus"></span>
+        <span class="import-status" id="importStatus"></span>
+      </div>
     <div class="tg-config" id="tgConfig" style="display:none">
       <div class="tg-config-title">Telegram backup setup</div>
       <div class="tg-config-hint">1. Message <strong>@BotFather</strong> → /newbot → copy the token.<br>2. Message your new bot once, then get your chat ID from <strong>@userinfobot</strong>.<br>3. Pick an account name — devices with the same name share one synced history; different names keep separate histories in the same chat.</div>
@@ -243,6 +247,7 @@
         <button class="data-btn data-btn-danger" id="tgDisable">Disable</button>
         <button class="data-btn" id="tgCancel">Cancel</button>
       </div>
+    </div>
     </div>
     <div class="card" id="historySection" style="display:none">
       <div class="card-title">Log History</div>
@@ -306,8 +311,8 @@
   </button>
 </nav>
 
-<script src="dotfield.js?v=30"></script>
-<script src="app.js?v=30"></script>
+<script src="dotfield.js?v=31"></script>
+<script src="app.js?v=31"></script>
 
 </body>
 </html>

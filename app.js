@@ -1038,8 +1038,9 @@ function getTgConfig() {
 function flashStatus(msg, ok) {
   const status = document.getElementById('importStatus');
   status.textContent = msg;
-  status.style.color = ok ? '#22c55e' : '#ef4444';
-  setTimeout(() => { status.textContent = ''; }, 3500);
+  status.classList.toggle('ok', ok);
+  status.classList.toggle('err', !ok);
+  setTimeout(() => { status.textContent = ''; status.classList.remove('ok', 'err'); }, 3500);
 }
 
 function updateTgBtn() {
@@ -1206,7 +1207,9 @@ function scheduleSync() {
 
 function setSyncIdleLabel() {
   const el = document.getElementById('syncStatus');
-  if (el) el.textContent = getTgConfig() ? `☁️ ${getAccount()}` : '';
+  if (!el) return;
+  el.classList.remove('ok', 'err');
+  el.textContent = getTgConfig() ? `☁️ ${getAccount()}` : '';
 }
 
 async function syncNow() {
@@ -1241,12 +1244,12 @@ async function syncNow() {
     // deleting messages younger than 48h).
     if (pinnedId) { try { await tgApi('deleteMessage', { chat_id: cfg.chatId, message_id: pinnedId }); } catch {} }
 
-    if (el) { el.textContent = `✓ synced · ${account}`; el.style.color = '#22c55e'; }
+    if (el) { el.textContent = `✓ synced · ${account}`; el.classList.add('ok'); el.classList.remove('err'); }
   } catch (err) {
-    if (el) { el.textContent = `✗ sync: ${err.message}`; el.style.color = '#ef4444'; }
+    if (el) { el.textContent = `✗ sync: ${err.message}`; el.classList.add('err'); el.classList.remove('ok'); }
   } finally {
     syncBusy = false;
-    setTimeout(() => { if (!syncBusy) { const s = document.getElementById('syncStatus'); if (s) { s.style.color = ''; } setSyncIdleLabel(); } }, 4000);
+    setTimeout(() => { if (!syncBusy) setSyncIdleLabel(); }, 4000);
   }
 }
 
@@ -1286,12 +1289,12 @@ document.getElementById('importFile').addEventListener('change', function () {
       render();
       scheduleSync();
       status.textContent = `✓ Imported ${valid.length} entr${valid.length === 1 ? 'y' : 'ies'}`;
-      status.style.color = '#22c55e';
+      status.classList.add('ok'); status.classList.remove('err');
     } catch (err) {
       status.textContent = `✗ ${err.message}`;
-      status.style.color = '#ef4444';
+      status.classList.add('err'); status.classList.remove('ok');
     }
-    setTimeout(() => { status.textContent = ''; }, 3500);
+    setTimeout(() => { status.textContent = ''; status.classList.remove('ok', 'err'); }, 3500);
     this.value = '';
   };
   reader.readAsText(file);
