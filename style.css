@@ -75,10 +75,10 @@ html[data-theme="light"] .demo-btn:hover            { background: #e0dad3; color
 html[data-theme="light"] .breakdown-item            { background: rgba(60,40,20,0.025); }
 html[data-theme="light"] .action-item               { background: rgba(60,40,20,0.03);  }
 
-/* Warning banner tints — keep readable on warm bg */
-html[data-theme="light"] .warning-banner      { background: rgba(239,68,68,0.07); }
-html[data-theme="light"] .warning-banner.good { background: rgba(34,197,94,0.07); }
-html[data-theme="light"] .warning-banner.amber{ background: rgba(245,158,11,0.07); }
+/* Warning banner tints — dark text variants, readable on warm bg */
+html[data-theme="light"] .warning-banner       { background: rgba(239,68,68,0.08);  color: #b91c1c; }
+html[data-theme="light"] .warning-banner.good  { background: rgba(34,197,94,0.08);  color: #15803d; }
+html[data-theme="light"] .warning-banner.amber { background: rgba(245,158,11,0.09); color: #b45309; }
 
 /* Smooth theme transitions */
 html, body, .card, .header, .mobile-nav,
